@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>rod-saude — registro diário</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+:root{
+  --bg:#0b1220; --bg2:#111c31; --card:#16233c; --card2:#1c2c49; --line:#25375a;
+  --tx:#e8eefb; --tx2:#9fb0cd; --tx3:#6c7f9f;
+  --ac:#38bdf8; --ok:#34d399; --wa:#fbbf24; --er:#f87171; --pr:#a78bfa; --cl:#d97757;
+  --safe: env(safe-area-inset-bottom, 0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--tx);
+  font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  padding-bottom:calc(74px + var(--safe));
+}
+h1,h2,h3{margin:0;font-weight:650}
+button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--tx);background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:8px 10px;width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--ac);outline-offset:-1px}
+input[type=number]{-moz-appearance:textfield}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+
+header{position:sticky;top:0;z-index:40;background:rgba(11,18,32,.94);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);padding:10px 14px 8px}
+.hrow{display:flex;align-items:center;gap:10px}
+.hrow h1{font-size:16px;letter-spacing:.2px;flex:1}
+.datenav{display:flex;align-items:center;gap:4px}
+.datenav button{padding:4px 9px;border-radius:8px;background:var(--card);font-size:15px;color:var(--tx2)}
+.datenav .d{font-size:13px;font-weight:600;min-width:104px;text-align:center;color:var(--tx)}
+.badge{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--card2);color:var(--tx2);white-space:nowrap}
+.badge.fds{background:#3a2a12;color:#fbbf24}
+
+.metas{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:9px}
+.meta{background:var(--card);border-radius:10px;padding:6px 7px}
+.meta .lb{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px}
+.meta .vl{font-size:14px;font-weight:700;line-height:1.2;margin-top:1px}
+.meta .vl small{font-size:10px;font-weight:500;color:var(--tx3)}
+.bar{height:4px;border-radius:2px;background:#0a1526;margin-top:5px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:2px;background:var(--ac);transition:width .25s}
+.bar i.ok{background:var(--ok)} .bar i.over{background:var(--er)} .bar i.pr{background:var(--pr)}
+
+main{padding:12px 14px 20px;max-width:760px;margin:0 auto}
+.tab{display:none} .tab.on{display:block}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:13px;margin-bottom:11px;overflow:hidden}
+.chead{display:flex;align-items:center;gap:9px;padding:11px 13px;cursor:pointer;user-select:none}
+.chead .hora{font-size:11px;font-weight:700;color:var(--ac);background:#0d2436;padding:2px 7px;border-radius:6px;letter-spacing:.3px;white-space:nowrap}
+.chead .nm{flex:1;font-weight:600;font-size:14px}
+.chead .kc{font-size:12px;color:var(--tx2);font-variant-numeric:tabular-nums;text-align:right}
+.chead .cv{font-size:12px;color:var(--tx3);transition:transform .2s}
+.chead.open .cv{transform:rotate(90deg)}
+.cbody{display:none;padding:0 13px 12px;border-top:1px solid var(--line)}
+.cbody.open{display:block}
+.card.done .chead .nm{color:var(--ok)}
+.card.done{border-color:#1f5741}
+
+.item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(37,55,90,.5)}
+.item:last-child{border-bottom:none}
+.chk{width:26px;height:26px;border-radius:7px;border:2px solid var(--line);flex:none;display:grid;place-items:center;font-size:13px;color:transparent;background:var(--bg2)}
+.chk.on{background:var(--ok);border-color:var(--ok);color:#06281c}
+.item .txt{flex:1;font-size:13px;line-height:1.35}
+.item .mac{font-size:10.5px;color:var(--tx3);margin-top:2px;font-variant-numeric:tabular-nums}
+.item.on .txt{color:var(--tx)}
+.item:not(.on) .txt{color:var(--tx2)}
+.item.livre .txt{color:var(--wa)}
+.qtd{width:58px;flex:none}
+.qtd select{padding:5px 4px;font-size:12px;text-align:center}
+.rmv{color:var(--er);font-size:17px;padding:2px 6px;flex:none;opacity:.75;background:none}
+
+.rowb{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.btn{background:var(--card2);border:1px solid var(--line);padding:9px 13px;border-radius:10px;font-size:13px;font-weight:600}
+.btn.p{background:var(--ac);color:#052539;border-color:var(--ac)}
+.btn.g{background:#123528;color:var(--ok);border-color:#1f5741}
+.btn.d{background:#33161a;color:var(--er);border-color:#5c2429}
+.btn.c{background:var(--cl);color:#2a0f06;border-color:var(--cl)}
+.btn.sm{padding:6px 10px;font-size:12px}
+.btn:active{transform:scale(.97)}
+.btn.wide{width:100%;justify-content:center;text-align:center}
+
+.ctr{display:flex;align-items:center;gap:12px;padding:11px 13px}
+.ctr .lbl{flex:1}
+.ctr .lbl b{display:block;font-size:14px}
+.ctr .lbl span{font-size:11.5px;color:var(--tx3)}
+.ctr .num{font-size:19px;font-weight:700;min-width:74px;text-align:center;font-variant-numeric:tabular-nums}
+.stp{width:38px;height:38px;border-radius:11px;background:var(--card2);border:1px solid var(--line);font-size:19px;font-weight:700;display:grid;place-items:center;flex:none}
+
+.alert{display:flex;gap:9px;padding:10px 12px;border-radius:11px;margin-bottom:8px;font-size:12.5px;line-height:1.45;border:1px solid}
+.alert .ic{font-size:14px;line-height:1.2;flex:none}
+.alert b{display:block;margin-bottom:1px;font-size:13px}
+.a-info{background:#0d2436;border-color:#1a4460;color:#bfe4f8}
+.a-warn{background:#2d2410;border-color:#5c4a19;color:#fde5b0}
+.a-good{background:#0f2b20;border-color:#1f5741;color:#bdf0d9}
+.a-crit{background:#331418;border-color:#5c2429;color:#fbc9c9}
+
+.kv{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid rgba(37,55,90,.5);font-size:13px}
+.kv:last-child{border-bottom:none}
+.kv .k{color:var(--tx2)} .kv .v{font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+.kv .v em{font-style:normal;font-size:10.5px;color:var(--tx3);display:block;font-weight:400}
+.v.hi{color:var(--wa)} .v.lo{color:var(--ac)} .v.gd{color:var(--ok)}
+.sec{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--tx3);margin:16px 0 7px;font-weight:700}
+.pad{padding:11px 13px}
+.muted{color:var(--tx3);font-size:12px;line-height:1.5}
+
+.tsel{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-bottom:11px}
+.tsel button{padding:11px 0;border-radius:10px;background:var(--card);border:1px solid var(--line);font-weight:700;font-size:12px;color:var(--tx2)}
+.tsel button.on{background:var(--ac);color:#052539;border-color:var(--ac)}
+.tsel button.rest.on{background:var(--tx3);color:#0b1220;border-color:var(--tx3)}
+.ex{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:9px;overflow:hidden}
+.exh{display:flex;align-items:center;gap:9px;padding:10px 12px}
+.exh .n{flex:1;font-weight:600;font-size:13.5px}
+.serie{display:grid;grid-template-columns:26px 1fr 1fr 1fr 30px;gap:6px;align-items:center;padding:5px 12px}
+.serie .ix{font-size:11px;color:var(--tx3);font-weight:700;text-align:center}
+.serie input{padding:7px 5px;text-align:center;font-size:13px;font-variant-numeric:tabular-nums}
+.shead{display:grid;grid-template-columns:26px 1fr 1fr 1fr 30px;gap:6px;padding:2px 12px 3px}
+.shead span{font-size:9.5px;color:var(--tx3);text-align:center;text-transform:uppercase;letter-spacing:.5px}
+.prev{font-size:10.5px;color:var(--tx3);padding:1px 12px 7px;font-variant-numeric:tabular-nums}
+
+svg.spark{width:100%;height:80px;display:block}
+.legend{display:flex;gap:12px;font-size:10.5px;color:var(--tx3);margin-top:5px;flex-wrap:wrap}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+
+nav{position:fixed;bottom:0;left:0;right:0;z-index:50;display:grid;grid-template-columns:repeat(6,1fr);
+  background:rgba(17,28,49,.96);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding-bottom:var(--safe)}
+nav button{padding:9px 0 8px;display:grid;justify-items:center;gap:2px;color:var(--tx3);font-size:9.5px;font-weight:600}
+nav button .i{font-size:18px;line-height:1}
+nav button.on{color:var(--ac)}
+nav button#n-claude{color:var(--cl)}
+nav button#n-claude .i{font-size:17px}
+
+.mask{position:fixed;inset:0;background:rgba(3,7,15,.75);z-index:60;display:none;align-items:flex-end;justify-content:center}
+.mask.on{display:flex}
+.sheet{background:var(--bg2);border:1px solid var(--line);border-radius:16px 16px 0 0;width:100%;max-width:560px;max-height:88vh;overflow:auto;padding:16px 15px calc(20px + var(--safe))}
+.sheet h3{font-size:15px;margin-bottom:4px}
+.sheet .sub{font-size:12px;color:var(--tx3);margin-bottom:12px;line-height:1.45}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:11px}
+.fgrid label{font-size:11px;color:var(--tx3);display:block;margin-bottom:3px}
+.f1{grid-column:1/-1}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;max-height:186px;overflow:auto}
+/* registro de dor */
+.dorEsc{display:grid;grid-template-columns:repeat(11,1fr);gap:4px;margin-top:4px}
+.dorEsc button{padding:9px 0;border-radius:8px;background:var(--bg2);border:1px solid var(--line);font-size:12px;font-weight:700;color:var(--tx3)}
+.dorEsc button.on{background:var(--ac);border-color:var(--ac);color:#052539}
+.dorEsc button.on.m{background:var(--wa);border-color:var(--wa);color:#2d2410}
+.dorEsc button.on.a{background:var(--er);border-color:var(--er);color:#2a0f06}
+.dorLb{display:flex;justify-content:space-between;font-size:10px;color:var(--tx3);margin-top:4px}
+.chip2{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.chip2 button{background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:7px 11px;font-size:12px;color:var(--tx2);line-height:1.2}
+.chip2 button.on{background:var(--ac);border-color:var(--ac);color:#052539;font-weight:650}
+.chip2 button.al{border-color:#5c2429;color:#f2a6a6}
+.chip2 button.al.on{background:var(--er);border-color:var(--er);color:#2a0f06;font-weight:700}
+.chip{background:var(--card);border:1px solid var(--line);border-radius:99px;padding:6px 11px;font-size:12px;color:var(--tx2)}
+.chip.al{border-color:#5c4a19;color:#fbbf24}
+.foto{width:100%;border-radius:11px;margin-bottom:10px;display:block;max-height:190px;object-fit:cover}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(88px + var(--safe));background:var(--ok);color:#06281c;padding:9px 16px;border-radius:99px;font-size:13px;font-weight:600;z-index:70;opacity:0;pointer-events:none;transition:opacity .2s;max-width:88vw;text-align:center}
+.toast.on{opacity:1}
+code{background:#0a1526;padding:1px 5px;border-radius:5px;font-size:11.5px;color:var(--ac)}
+pre{background:#0a1526;padding:10px;border-radius:9px;font-size:11px;overflow:auto;color:var(--tx2);margin:0 0 10px}
+</style>
+</head>
+<body>
+
+<div id="onb" class="onb"></div>
+
+<header>
+  <div id="pbar" class="pbar"></div>
+  <div class="hrow">
+    <h1 id="ttl">Hoje</h1>
+    <span class="badge" id="bdg">—</span>
+    <div class="datenav">
+      <button onclick="mvDia(-1)">‹</button>
+      <span class="d" id="dlbl">—</span>
+      <button onclick="mvDia(1)">›</button>
+    </div>
+  </div>
+  <div class="metas" id="metas"></div>
+</header>
+
+<main>
+  <section class="tab on" id="t-hoje"></section>
+  <section class="tab" id="t-treino"></section>
+  <section class="tab" id="t-medidas"></section>
+  <section class="tab" id="t-saude"></section>
+  <section class="tab" id="t-dados"></section>
+</main>
+
+<nav id="nav"></nav>
+
+<div class="mask" id="mask" onclick="if(event.target===this)fechar()">
+  <div class="sheet" id="sheet"></div>
+</div>
+<div class="toast" id="toast"></div>
+<style>
+.pbar{display:flex;align-items:center;gap:8px;padding:6px 14px 0;font-size:12px;color:var(--tx2);white-space:nowrap;overflow:hidden}
+.pbar .qt{overflow:hidden;text-overflow:ellipsis}
+.pbar .pnome{font-weight:700;color:var(--tx)}
+.pbar select{background:var(--c2);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:4px 8px;font-size:12px;font-family:inherit}
+.pbar .tagm{background:var(--ac);color:#04121f;border-radius:6px;padding:1px 6px;font-size:10px;font-weight:800;letter-spacing:.4px}
+.onb{display:none;position:fixed;inset:0;background:var(--c1);z-index:99;overflow:auto;padding:28px 18px 40px}
+.onb.on{display:block}
+.onb h2{font-size:20px;margin:0 0 6px}
+.onb .sub{color:var(--tx2);font-size:13px;margin-bottom:18px;line-height:1.5}
+.onb .pcard{background:var(--c2);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:10px}
+</style>
+
+<script>
+/* ============================================================
+   rod-saude MULTIPERFIL — versão 4-beta (15082026) · cache sw v2-beta
+   Esta é a versão de TESTE, em /v2/. A versão 3, de perfil único, continua
+   intacta na raiz e é a que roda no aparelho de uso diário.
+   Aqui cada pessoa da família é um PERFIL separado dentro do mesmo app:
+   dados, cardápio, exames e treino não se misturam entre perfis.
+   Base: panorama de saúde 25072026 + plano nutricional 28072026 (whey 30 g)
+        + RM de coluna 08082026 e comparação direta das imagens 2024/2025/2026
+        + programa de treino ABCDE de 15082026 (Spring / Summer)
+   Dados apenas neste aparelho (localStorage). Backup em Dados.
+   ============================================================ */
+
+/* ---------- 1. PLANO NUTRICIONAL PADRÃO ---------- */
+/* Cada item é a UNIDADE (1 colher, 1 xícara, 1 ovo, 1 scoop de 30 g, 100 g).
+   O campo q é a quantidade padrão do plano — o seletor abre para qualquer valor. */
+const PLANO_PADRAO = [
+  {id:'r1', hora:'04:30', nome:'Pré-treino', itens:[
+    {n:'Banana média (100 g)', kcal:89, p:1.1, c:23, g:0.3},
+    {n:'Farelo de aveia — 1 col. sopa (10 g)', kcal:24.7, p:1.7, c:6.6, g:0.7, q:3},
+    {n:'Mel — 1 col. sopa (20 g)', kcal:61, p:0, c:17, g:0},
+    {n:'Água — 300 ml', kcal:0, p:0, c:0, g:0, agua:300},
+    {n:'Limão (suco)', kcal:4, p:0.1, c:1, g:0},
+    {n:'Beterraba — 1 col. sopa', kcal:5, p:0.1, c:0.8, g:0},
+    {n:'Gengibre', kcal:1, p:0, c:0.2, g:0},
+    {n:'Creatina — 7 g', kcal:0, p:0, c:0, g:0},
+    {n:'Própolis verde — 20 gotas', kcal:0, p:0, c:0, g:0},
+    {n:'Café puro — 1 xícara', kcal:2, p:0.3, c:0, g:0, q:2}
+  ]},
+  {id:'r2', hora:'07:15', nome:'Pós-treino — vitamina', itens:[
+    {n:'Whey isolado — 1 scoop (30 g de pó) = 19,5 g de proteína', kcal:110, p:19.5, c:6.4, g:0.75, q:1.5},
+    {n:'Banana média (100 g)', kcal:89, p:1.1, c:23, g:0.3},
+    {n:'Mamão (100 g)', kcal:43, p:0.5, c:11, g:0.2},
+    {n:'Abacate (70 g)', kcal:112, p:1.4, c:6, g:10.3},
+    {n:'Mistura caseira — 1 col. sopa (11 g)', kcal:52, p:2, c:4.4, g:2.85, q:2},
+    {n:'Água — 450 ml', kcal:0, p:0, c:0, g:0, agua:450},
+    {n:'Cloreto de magnésio — 15 ml', kcal:0, p:0, c:0, g:0}
+  ]},
+  {id:'r3', hora:'07:40', nome:'Complemento', itens:[
+    {n:'Ovo cozido — 1 unidade', kcal:78, p:6.3, c:0.6, g:5.3, q:3},
+    {n:'Pasta de amendoim — ½ col. sopa (10 g)', kcal:59, p:2.4, c:1.9, g:5.1},
+    {n:'Castanha-do-pará — 1 unidade (selênio)', kcal:26.5, p:0.55, c:0.5, g:2.7, q:2},
+    {n:'Girassol + abóbora — ½ col. sopa', kcal:34, p:1.3, c:1, g:2.9},
+    {n:'Café — 1 xícara', kcal:2, p:0.3, c:0, g:0, q:2}
+  ]},
+  {id:'r4', hora:'10:00', nome:'Lanche', itens:[
+    {n:'Café — 1 xícara', kcal:2, p:0.3, c:0, g:0},
+    {n:'Fruta: maçã, pera, laranja ou 2 kiwis', kcal:80, p:0.4, c:21, g:0.3},
+    {n:'Iogurte grego natural desnatado (170 g)', kcal:100, p:17, c:6, g:0.5}
+  ]},
+  {id:'r5', hora:'12:30', nome:'Almoço', itens:[
+    {n:'Alface à vontade', kcal:10, p:0.7, c:2, g:0.1},
+    {n:'Tomate — 1 unidade', kcal:18, p:0.8, c:4, g:0.2},
+    {n:'Rabanete', kcal:8, p:0.3, c:1.5, g:0},
+    {n:'Cebola', kcal:9, p:0.2, c:1.5, g:0},
+    {n:'Azeite extravirgem — 1 col. sopa', kcal:108, p:0, c:0, g:12},
+    {n:'Vinagre de maçã', kcal:2, p:0, c:0.4, g:0},
+    {n:'Mostarda — 1 col. chá', kcal:3, p:0, c:0.3, g:0},
+    {n:'Orégano e pimenta calabresa', kcal:0, p:0, c:0.3, g:0},
+    {n:'Arroz cozido — 1 col. sopa (25 g)', kcal:32, p:0.66, c:7, g:0.06, q:9},
+    {n:'Feijão — 1 col. sopa (20 g)', kcal:15.25, p:0.975, c:2.725, g:0.1, q:8},
+    {n:'Legume cozido — 1 concha (abóbora, chuchu, quiabo, cenoura)', kcal:50, p:1.5, c:10, g:0.5},
+    {n:'Carne MAGRA — 100 g (patinho, coxão mole, frango, peixe, lombo)', kcal:170, p:22, c:0, g:8.5, q:1.8}
+  ]},
+  {id:'r6', hora:'17:00', nome:'Lanche', itens:[
+    {n:'Whey isolado — 1 scoop (30 g de pó) = 19,5 g de proteína', kcal:110, p:19.5, c:6.4, g:0.75, q:0.5},
+    {n:'Banana média (100 g)', kcal:89, p:1.1, c:23, g:0.3},
+    {n:'Iogurte grego natural (100 g)', kcal:73, p:9, c:4, g:2.5},
+    {n:'Fruta extra: mamão, melão ou abacaxi (150 g)', kcal:60, p:0.8, c:15, g:0.2}
+  ]},
+  {id:'r7', hora:'19:30', nome:'JANTAR', jantar:true, itens:[
+    {n:'Proteína — 100 g (frango, peixe, carne moída magra, atum ou 2 ovos)', kcal:160, p:22, c:0, g:7.3, q:1.5},
+    {n:'Carboidrato: 5 col. arroz OU 2 fatias de pão integral OU 1 batata-doce', kcal:225, p:5, c:48, g:1.2},
+    {n:'Salada ou legume refogado', kcal:34, p:2, c:8, g:0},
+    {n:'Fio de azeite (4 g)', kcal:36, p:0, c:0, g:4}
+  ]}
+];
+/* 8ª refeição: livre, sem itens de plano */
+const REF_EXTRA = {id:'r8', hora:'livre', nome:'Extras e fora de hora', livre:true, itens:[]};
+
+/* ---------- 2. BIBLIOTECA DE ITENS AVULSOS ---------- */
+const EXTRAS = [
+  {n:'Cerveja 350 ml', kcal:147, p:1.1, c:11.6, g:0, dose:1},
+  {n:'Taça de vinho 150 ml', kcal:125, p:0.1, c:4, g:0, dose:1},
+  {n:'Whisky dose 50 ml', kcal:110, p:0, c:0, g:0, dose:1},
+  {n:'Caipirinha', kcal:250, p:0, c:22, g:0, dose:1.5},
+  {n:'Queijo coalho 1 espeto (80 g)', kcal:260, p:18, c:1, g:20, sat:true},
+  {n:'Picanha 150 g', kcal:435, p:27, c:0, g:36, sat:true},
+  {n:'Costela / carne gordurosa 150 g', kcal:450, p:30, c:0, g:36, sat:true},
+  {n:'Linguiça 100 g', kcal:300, p:15, c:2, g:26, sat:true},
+  {n:'Pizza 1 fatia', kcal:285, p:12, c:30, g:12, sat:true},
+  {n:'Pão de alho 1 un.', kcal:130, p:3, c:15, g:6, sat:true},
+  {n:'Cuscuz 1 fatia (100 g)', kcal:112, p:2.2, c:25, g:0.5},
+  {n:'Cuscuz com frango desfiado — tigela (250 g)', kcal:395, p:26, c:36, g:12},
+  {n:'Cuscuz com ovo (200 g)', kcal:330, p:14, c:42, g:11},
+  {n:'Macaxeira cozida 150 g', kcal:190, p:1, c:45, g:0.4},
+  {n:'Tapioca com ovo', kcal:220, p:8, c:30, g:7},
+  {n:'Pão integral + peito de peru', kcal:200, p:14, c:26, g:4},
+  {n:'Castanha de caju 30 g', kcal:170, p:5, c:9, g:14},
+  {n:'Amendoim 30 g', kcal:170, p:7.7, c:5, g:14.7},
+  {n:'Frango grelhado 150 g', kcal:240, p:43, c:0, g:6},
+  {n:'Peixe grelhado 150 g', kcal:210, p:36, c:0, g:7},
+  {n:'Atum em água 1 lata (120 g)', kcal:130, p:28, c:0, g:1},
+  {n:'Ovos mexidos (3)', kcal:250, p:19, c:2, g:18},
+  {n:'Ovo cozido (1)', kcal:78, p:6.3, c:0.6, g:5.3},
+  {n:'Iogurte grego natural 170 g', kcal:100, p:17, c:6, g:0.5},
+  {n:'Whey 1 scoop (30 g de pó)', kcal:110, p:19.5, c:6.4, g:0.75},
+  {n:'Café — 1 xícara', kcal:2, p:0.3, c:0, g:0},
+  {n:'Batata-doce 200 g', kcal:154, p:2.8, c:36, g:0.2},
+  {n:'Quinoa 2 col. + iogurte', kcal:180, p:8, c:26, g:4},
+  {n:'Refrigerante 350 ml', kcal:140, p:0, c:37, g:0},
+  {n:'Água de coco 200 ml', kcal:40, p:0, c:9, g:0, agua:200},
+  {n:'Açaí 300 ml', kcal:300, p:3, c:45, g:12},
+  {n:'Sorvete 100 g', kcal:200, p:3, c:24, g:10, sat:true},
+  {n:'Chocolate 25 g', kcal:135, p:1.5, c:15, g:8, sat:true},
+  {n:'Pão de queijo 1 un.', kcal:90, p:2, c:9, g:5, sat:true},
+  {n:'Coxinha 1 un.', kcal:300, p:8, c:30, g:17, sat:true}
+];
+
+/* ---------- 3. TREINO: sugestão inicial editável ---------- */
+const TREINO_SEED = {
+  /* Programa ABCDE de 15082026 — bloco de 8 semanas, ciclo rolante.
+     Prédio principal de cada sessão entre parênteses no rótulo abaixo.
+     Detalhe de séries, cargas e alternativas: "Rodolfo Costa - programa de treino - 15082026.docx". */
+  A:{corrida:true,  rot:'A — Empurrar (Spring)', ex:['Supino reto com barra','Supino inclinado com halteres','Crossover polia alta','Desenvolvimento com halteres','Tríceps corda na polia','Tríceps francês unilateral']},
+  B:{corrida:false, rot:'B — Quadríceps (Spring)', ex:['Agachamento livre com barra','Leg press 45°','Cadeira extensora','Mesa flexora']},
+  C:{corrida:false, rot:'C — Puxar (Summer)', ex:['Barra fixa pegada pronada','Puxador alto pegada aberta','Remada baixa com triângulo','Pullover na polia alta','Rosca alternada com halteres','Rosca no banco inclinado']},
+  D:{corrida:false, rot:'D — Posterior e ombro (Spring)', ex:['Terra convencional','Stiff com barra','Elevação pélvica com barra','Elevação lateral com halteres','Face pull na polia alta','Rotação externa no crossover']},
+  D2:{corrida:false, rot:'D2 — Posterior e ombro SEM CARGA AXIAL (Spring)', ex:['Mesa flexora','Elevação pélvica com barra','Flexão nórdica assistida','Cadeira abdutora','Elevação lateral com halteres','Face pull na polia alta','Rotação externa no crossover']},
+  E:{corrida:true,  rot:'E — Acessórios (Summer, cardio no Spring)', ex:['Pallof press','Prancha frontal','Prancha lateral','Dead bug','Bird dog','Panturrilha em pé no degrau','Farmer\'s walk com kettlebell','Encolhimento com halteres','Rosca inversa na barra W','Pendura passiva na barra fixa']}
+};
+
+/* ---------- 4. HISTÓRICO MÉDICO PADRÃO ---------- */
+const LABS_PADRAO = [
+  {k:'Colesterol total', v:'188,3 mg/dL', d:'28032026', s:'hi', o:'No limite ou acima na maioria das coletas desde 2013 (240 em 2018, 228 em 10/2024). Alvo dietético principal.'},
+  {k:'LDL', v:'112,4 mg/dL', d:'28032026', s:'hi', o:'Pico de 145 em 10/2024. Em queda desde então.'},
+  {k:'HDL', v:'60,1 mg/dL', d:'28032026', s:'gd', o:'Bom e em tendência de alta na série (60 a 72).'},
+  {k:'Triglicerídeos', v:'72,1 mg/dL', d:'28032026', s:'gd', o:'Controlados.'},
+  {k:'Creatinina', v:'1,18 mg/dL', d:'28032026', s:'hi', o:'1,19 (09/2025) e 1,23 (05/2026). Coincide com musculação, creatina e dieta hiperproteica.'},
+  {k:'TFGe', v:'76 mL/min', d:'28032026', s:'hi', o:'INDETERMINADA, não alterada. Só a cistatina C separa efeito de músculo de efeito de rim.'},
+  {k:'HbA1c', v:'4,9%', d:'28032026', s:'gd', o:'Melhor valor de toda a série. Sem resistência insulínica.'},
+  {k:'Glicose', v:'77 mg/dL', d:'28032026', s:'gd', o:''},
+  {k:'Insulina basal', v:'2,2', d:'28032026', s:'gd', o:''},
+  {k:'Ácido úrico', v:'4,6 mg/dL', d:'28032026', s:'gd', o:'Baixo e em queda. Sem restrição de purinas indicada.'},
+  {k:'TGO / TGP', v:'34 / 32 U/L', d:'25072026', s:'gd', o:'Faixas 11-39 e 11-45. Normais, porém acima da média da própria série (23-31 e 21-25). Com GGT em 15, bilirrubinas e fosfatase alcalina normais, o padrão não é de fígado: transaminase também sobe por músculo, e você treina cinco vezes por semana.'},
+  {k:'GGT', v:'15 U/L', d:'25072026', s:'gd', o:'Faixa 7-58. Ponta baixa. É o marcador hepático mais sensível ao álcool, e está ótimo — dado objetivo de que o fim de semana não vem produzindo sinal no fígado.'},
+  {k:'Fosfatase alcalina', v:'74 U/L', d:'25072026', s:'gd', o:'Faixa 27-100. Primeira dosagem da série. Origem hepática, óssea e intestinal.'},
+  {k:'Bilirrubinas', v:'T 0,70 · D 0,30 · I 0,40', d:'25072026', s:'gd', o:'Referências: total até 1,2 e direta até 0,4. Primeira dosagem da série. Fecha o hepatograma: nenhum sinal de colestase.'},
+  {k:'Vitamina D', v:'35,8 ng/mL', d:'28032026', s:'gd', o:'Corrigida de 24,9 em 2017. Manutenção a monitorar.'},
+  {k:'Vitamina B12', v:'312 pg/mL', d:'28032026', s:'gd', o:'Corrigida de 210 em 2023.'},
+  {k:'Ferritina', v:'187,1', d:'28032026', s:'gd', o:''},
+  {k:'TSH / T4 livre', v:'1,38 / 0,91', d:'28032026', s:'gd', o:'Tireoide normal.'},
+  {k:'Testosterona total', v:'622 ng/dL', d:'09042026', s:'gd', o:'Faixa 175-781. Melhor valor de toda a série: 287 (2017), 454-524 (2023-2024), 322 (04/2025), 481 (09/2025), 622 (04/2026). O laboratório trocou método e referência em 08092025, então a comparação com os anteriores a essa data é imperfeita.'},
+  {k:'Testosterona livre', v:'9,68 ng/dL', d:'25072026', s:'gd', o:'Faixa 1,67-18,30 para 41-60 anos. Praticamente igual à de 04/2026 (10,11).'},
+  {k:'Testosterona biodisponível', v:'253,0 ng/dL', d:'25072026', s:'gd', o:'Faixa 58-436 para 41-60 anos. Metade superior. Primeira dosagem da série. É a fração que o corpo consegue usar, e é a mais informativa das três.'},
+  {k:'SHBG', v:'22,0 nmol/L', d:'25072026', s:'hi', o:'Faixa 13,2-89,5, dentro do normal, MAS caiu um terço em três meses (33,4 em 04/2026). Como a fração livre ficou igual, a queda do carregador sugere que a testosterona TOTAL também caiu — e ela não foi dosada nesta coleta. Levar ao médico.'},
+  {k:'PSA total', v:'0,56', d:'25092025', s:'gd', o:''},
+  {k:'PCR', v:'0,05', d:'25092025', s:'gd', o:'Sem inflamação sistêmica.'},
+  {k:'Hemoglobina', v:'15,3 g/dL', d:'28032026', s:'gd', o:''}
+];
+const ESTRUTURAL_PADRAO = [
+  {k:'Coluna lombar — RM 08082026', v:'ACHADO RECÉM-DESCRITO, NÃO NECESSARIAMENTE NOVO: em L5-S1 há fissura do ânulo fibroso com componentes biforaminais MAIOR À ESQUERDA COMPRIMINDO AS RAÍZES EMERGENTES, e artrose das interapofisárias com líquido intra-articular bilateral. Em conjunto, produzem ACENTUADA REDUÇÃO DOS CALIBRES FORAMINAIS (estenose), maior à esquerda. Exige avaliação de especialista em coluna antes de aumentar carga.'},
+  {k:'Coluna lombar — comparação direta das imagens 2024 / 2025 / 2026', v:'A leitura lado a lado das três RM mostra gordura foraminal reduzida DOS DOIS LADOS em L5-S1 nas TRÊS datas, o esquerdo mais comprometido em todas, SEM PIORA EVIDENTE. Ou seja: a estenose foraminal passou a ser DESCRITA em 08082026, mas já estava na imagem antes. Isso não reduz a urgência da avaliação — a dor piorou —, mas afasta a leitura de deterioração rápida.'},
+  {k:'Coluna lombar — Modic', v:'O laudo de 08082026 registra pequena REDUÇÃO da intensidade das alterações Modic I nos platôs de L5-S1, com Modic II leve presente. A leitura mais provável é MIGRAÇÃO Modic I → II, isto é, a fase inflamatória cedendo lugar à fase de conversão gordurosa/cicatricial — o caminho esperado de estabilização, e coerente com a melhora de dor no período do fortalecimento. Isso desmente o registro anterior de "progressão".'},
+  {k:'Coluna lombar — RETRATAÇÃO de leitura anterior', v:'Foi registrado antes que o edema do nódulo de Schmorl de L1 teria regredido. A comparação direta das imagens NÃO sustenta essa conclusão: o edema de L1 permanece. A inferência anterior foi retirada. Regra que ficou desta correção: conclusão de evolução só a partir da comparação das IMAGENS, nunca da simples diferença de redação entre laudos.'},
+  {k:'Coluna lombar — o que permanece', v:'Anterolistese de L5 grau I por lise crônica dos istmos (espondilólise). Degeneração discal L5-S1 com redução de altura. Modic I e leves Modic II, nódulos de Schmorl, osteófitos marginais em L5 e S1. Canal vertebral, cone medular e cauda equina preservados.'},
+  {k:'Coluna lombar — outros níveis', v:'L3-L4: pequeno abaulamento tocando o saco dural, insinuação na base foraminal direita, hipertrofia das interapofisárias. L4-L5: mínimo abaulamento, hipertrofia das interapofisárias, discreto espessamento dos ligamentos amarelos. Nódulo de Schmorl em L1 com edema adjacente.'},
+  {k:'Musculatura lombar', v:'Leve edema dos ligamentos interespinhosos em L4-L5 e L5-S1, atribuído no laudo a provável sobrecarga mecânica ou estiramento. Leve hipotrofia da musculatura paravertebral posterior na transição lombossacra — alvo direto de trabalho.'},
+  {k:'SINTOMAS ATUAIS (relato de 15082026)', v:'Dor AUMENTOU nas últimas semanas, CONCENTRADA NO QUADRIL, SEM irradiação para as pernas. A ausência de irradiação é a parte boa: a compressão radicular descrita na RM não está produzindo sintoma neurológico. A piora, porém, é mudança de estado e pede avaliação. Dor de quadril e nádega sem descer da perna é o padrão de referência clássico da articulação interapofisária, e a RM descreve artrose dessas articulações com líquido intra-articular bilateral. Articulação sacroilíaca e tendinopatia glútea entram no mesmo diagnóstico diferencial. Quem separa é o especialista.'},
+  {k:'SINAIS DE ALARME — procurar atendimento sem esperar', v:'Dor que passe a descer pela perna. Dormência ou formigamento em faixa. Perda de força, tropeço ou dificuldade de levantar a ponta do pé. Dormência na região da sela (períneo). Qualquer alteração para urinar ou evacuar. Febre, dor noturna intensa que acorda, ou perda de peso sem explicação.'},
+  {k:'Ombro direito', v:'Artropatia inflamatória acromioclavicular acentuada (RM 2021). Artroscopia ~2019. Hoje sem dor, força e movimento ótimos.'},
+  {k:'Ombro esquerdo', v:'Artroscopia ~2016. RM de 06052016 SEM laudo na pasta; espaço acromioumeral medido em ~7,7 mm (limite inferior). Pedir leitura radiológica.'},
+  {k:'Cotovelo', v:'Epicondilite lateral leve e medial moderada (US 2025).'},
+  {k:'Joelho esquerdo', v:'Operado em 26012023 (lesão do corno posterior do menisco medial + cisto parameniscal). Condromalácia patelar grau I.'},
+  {k:'Joelho direito', v:'Degeneração do mesmo corno, SEM rotura. Condromalácia patelar grau I.'},
+  {k:'Estômago', v:'Endoscopia 2025: gastrite enantematosa leve de antro. H. pylori negativo.'},
+  {k:'Tórax', v:'TC 16052026: espessamento brônquico do lobo inferior direito em quadro gripal — confirmar resolução. Microgranuloma calcificado residual da covid de 2021.'},
+  {k:'Abdome e tireoide', v:'US 2023 e 2024 normais. Angio-RM cerebral 2021 normal.'}
+];
+const PERGUNTAS_PADRAO = [
+  'A RM de 08082026 descreve estenose foraminal ACENTUADA em L5-S1 com compressão das raízes emergentes, maior à esquerda. Eu não tenho dor irradiada. Isso muda a conduta, e preciso de avaliação com especialista em coluna agora?',
+  'Com essa estenose foraminal, posso manter agachamento, levantamento terra e leg press? Que movimentos devo tirar do programa e quais devo priorizar?',
+  'A mesma RM mostra pequena REDUÇÃO das alterações Modic I, com Modic II leve presente. Isso é a migração Modic I → II (inflamatória para cicatricial)? Significa que a musculação está ajudando e devo manter o que venho fazendo?',
+  'Comparando diretamente as imagens de 2024, 2025 e 2026, a gordura foraminal de L5-S1 já estava reduzida dos dois lados nas três datas, sem piora evidente. A estenose foraminal é achado NOVO ou apenas recém-descrito? Isso muda a conduta?',
+  'Se a imagem está estável e a dor piorou, o que explica a piora: a estenose foraminal, a artrose das interapofisárias com líquido intra-articular, a sacroilíaca, ou tendinopatia glútea? Que exame ou manobra separa essas hipóteses?',
+  'O laudo aponta hipotrofia da musculatura paravertebral na transição lombossacra e edema dos ligamentos interespinhosos por sobrecarga. Vale fisioterapia ou trabalho específico de estabilização antes de voltar a subir carga?',
+  'Na coleta de 25/07/2026 saíram a testosterona livre, a biodisponível e o SHBG, mas NÃO a total. Vale dosar a total para fechar a leitura?',
+  'Meu SHBG caiu de 33,4 para 22,0 em três meses e a fração livre ficou igual (10,11 para 9,68). Isso significa que a testosterona total caiu? O que faz o SHBG baixar assim, se minha glicada é 4,9 e a insulina 2,2?',
+  'A biodisponível deu 253 numa faixa de 58 a 436. Sendo a fração que o corpo usa de fato, ela basta para dizer que está tudo bem, ou preciso da total mesmo assim?',
+  'Minha testosterona total foi de 322 em 04/2025 para 622 em 04/2026. O laboratório mudou o método em 09/2025. Essa alta foi real ou efeito da troca de metodologia?',
+  'TGO e TGP subiram um pouco (34 e 32), mas GGT deu 15, bilirrubinas e fosfatase alcalina normais. Esse padrão é do treino de força ou merece investigação de fígado?',
+  'Uso ZMA com boro e tribulus. O laudo alerta que suplementos com esteroides podem interferir no imunoensaio da testosterona. Isso compromete o meu resultado?',
+  'Meu colesterol/LDL está no limite há mais de dez anos, com HDL bom — qual é o meu risco cardiovascular e há indicação de tratamento?',
+  'Treino 5x/semana, tomo 7 g de creatina por dia e como bastante proteína: minha creatinina e minha TFGe são confiáveis? Faz sentido dosar cistatina C e a relação albumina/creatinina urinária?',
+  'Devo suspender a creatina antes da próxima coleta? Por quanto tempo?',
+  'Minha suplementação (7 g de creatina, ~80 g de whey por dia e 3 ovos) é adequada, considerando rim e fígado?',
+  'A TC de tórax de 05/2026 mostrou espessamento brônquico no quadro gripal — devo repetir para confirmar que resolveu?',
+  'A CPK estava 355 em 2022 — devo repetir e investigar?',
+  'Tenho uma RM de ombro esquerdo de 2016 que nunca foi laudada — vale pedir o laudo agora ou repetir o exame?'
+];
+/* ---------- registro de dor ---------- */
+const DOR_LOCAIS = ['Lombar','Quadril direito','Quadril esquerdo','Nádega direita','Nádega esquerda',
+  'Virilha','Coxa (acima do joelho)','Perna (abaixo do joelho)','Pé','Pescoço',
+  'Ombro direito','Ombro esquerdo','Cotovelo','Joelho direito','Joelho esquerdo','Outro'];
+/* sintomas com alarme:true disparam o aviso de procurar atendimento sem esperar */
+const DOR_SINTOMAS = [
+  {n:'Dor irradiando para a perna', alarme:true},
+  {n:'Formigamento', alarme:true},
+  {n:'Dormência', alarme:true},
+  {n:'Perda de força', alarme:true},
+  {n:'Dificuldade de levantar a ponta do pé', alarme:true},
+  {n:'Dormência na região da sela', alarme:true},
+  {n:'Alteração para urinar ou evacuar', alarme:true},
+  {n:'Rigidez ao acordar', alarme:false},
+  {n:'Piora ao ficar em pé parado', alarme:false},
+  {n:'Piora ao sentar', alarme:false},
+  {n:'Piora no treino', alarme:false},
+  {n:'Melhora ao inclinar para a frente', alarme:false}
+];
+
+const CUIDADOS_PADRAO = [
+  {re:/agachamento|terra|stiff|leg press|remada curvada|afundo|avanço|good ?morning|hack/i,
+   t:'Carga axial e coluna L5-S1 — SINTOMÁTICO', m:'RM de 08082026: estenose foraminal ACENTUADA em L5-S1 com compressão das raízes, sobre espondilólise com anterolistese grau I. E a dor AUMENTOU nas últimas semanas, no quadril. Com sintoma em curso e sem avaliação de especialista, este não é momento de buscar carga: neutro de coluna, core ativo, amplitude que não dói. Pare na hora se a dor começar a descer pela perna, ou se aparecer formigamento, dormência ou fraqueza.'},
+  {re:/hiperextens|extensão lombar|banco romano|good ?morning|stiff|levantamento terra|desenvolvimento militar em pé|agachamento overhead|abdominal infra|elevação de pernas/i,
+   t:'Extensão da lombar', m:'O forame se fecha na extensão e se abre na flexão. Com estenose foraminal acentuada em L5-S1, movimentos que jogam a lombar em extensão tendem a ser os mais sintomáticos. Ponto a levar ao especialista antes de manter no programa.'},
+  {re:/supino|desenvolvimento|elevação lateral|elevação frontal|crucifixo|crossover|paralela|mergulho/i,
+   t:'Ombro acromioclavicular', m:'Artropatia AC acentuada à direita. Evite amplitude máxima com dor e cruzamento excessivo da linha média.'},
+  {re:/rosca|tríceps|triceps|punho|antebraço|pulley|polia/i,
+   t:'Cotovelo', m:'Epicondilite lateral leve e medial moderada. Pegada neutra e volume moderado ajudam.'},
+  {re:/extensora|agachamento|leg press|afundo|avanço/i,
+   t:'Patela', m:'Condromalácia patelar grau I nos dois joelhos e joelho esquerdo operado em 01/2023. Evite amplitude que provoque dor anterior.'},
+  {re:/^terra|levantamento terra|terra convencional/i,
+   t:'Teto do terra neste bloco: 140 kg', m:'140 kg é 76% do 1RM de 184, dentro do teto de 80% acordado até a liberação do ortopedista. Aquecimento de no máximo 2 séries (60x5 e 100x3). Nenhuma série até a falha. Se a lombar arredondar em qualquer série, encerre o exercício naquele dia.'},
+  {re:/bird dog|dead bug|flexão nórdica|nordica/i,
+   t:'Musculatura paravertebral', m:'A RM de 08082026 descreve leve hipotrofia da musculatura paravertebral posterior na transição lombossacra. Bird dog e dead bug são trabalho de extensor lombar em posição NEUTRA: fortalecem essa musculatura sem fechar o forame. Hiperextensão carregada, banco romano e good morning fazem o contrário e estão fora do programa.'},
+  {re:/agachamento livre|agachamento com barra|agachamento guiado/i,
+   t:'Teto do agachamento neste bloco: 90 kg', m:'90 kg é 75% do 1RM de 120, dentro do teto acordado. Desça até o joelho a 90° ou até onde a pelve NÃO retroverter — o momento em que a lombar arredonda no fundo é o momento em que a carga migra do quadril para a pars de L5.'},
+  {re:/flexão de tronco|máquina de abdominal|abdominal (na )?máquina|abdominal com anilha|crunch|supra ?abdominal/i,
+   t:'PROIBIDO: flexão lombar carregada', m:'Flexão de tronco carregada e repetida é o padrão que mais estressa a pars interarticular de L5 — exatamente o local da espondilólise. Não use a máquina de abdominal do Spring. Substitua por Pallof press, prancha, prancha lateral, dead bug, bird dog e farmer\'s walk, que treinam o core resistindo ao movimento em vez de produzi-lo.'}
+];
+
+/* CUIDADOS_PADRAO usa expressão regular literal porque é código.
+   Dentro do perfil ela vira TEXTO, para poder viajar em JSON. */
+function cuidadosSemente(){ return CUIDADOS_PADRAO.map(c=>({re:c.re.source, t:c.t, m:c.m})); }
+function cuidadosDe(){ return (S.cuidados||[]).map(c=>{
+  try{ return {re:new RegExp(c.re,'i'), t:c.t, m:c.m}; }catch(e){ return null; } }).filter(Boolean); }
+
+/* ---------- 5. ESTADO ---------- */
+const KEY='rodsaude_v2';          /* chave nova: não conflita com a v1 na mesma origem */
+const CODIGO_MESTRE = 'CL2026';  /* libera o modo master neste aparelho. Troque aqui se quiser. */
+
+/* PRAZOS: cada perfil tem os seus. modo 'pendente' = alerta enquanto a data estiver vazia.
+   modo 'agenda' = alerta de contagem regressiva quando a data se aproxima. */
+const PRAZOS_PADRAO = [
+  {k:'coluna', rot:'Especialista em coluna — consulta', ic:'🦴', modo:'pendente', d:'',
+   t:'Avaliação com especialista em coluna ainda não marcada',
+   m:'A RM de 08082026 descreve estenose foraminal acentuada em L5-S1 com compressão das raízes, e desde então a dor aumentou, concentrada no quadril. Deixou de ser achado de imagem e virou sintoma. Enquanto não houver avaliação, trate carga axial e extensão lombar com contenção. Procure atendimento SEM ESPERAR se aparecer dor descendo pela perna, dormência, fraqueza, perda de força no pé ou qualquer alteração para urinar ou evacuar.'},
+  {k:'cistatina', rot:'Cistatina C — feita em', ic:'🔬', modo:'pendente', d:'',
+   t:'Cistatina C ainda pendente',
+   m:'É a maior prioridade da próxima consulta. Sua TFGe de 75-76 pode ser artefato de massa muscular, treino e creatina — a cistatina C separa efeito de músculo de efeito de rim. Peça junto a relação albumina/creatinina urinária.'},
+  {k:'lipidico', rot:'Perfil lipídico — reavaliar', ic:'📆', modo:'agenda', d:'2026-11-26',
+   t:'Reavaliação do perfil lipídico',
+   m:'Antes da coleta, discuta com o médico suspender a creatina por 2 a 4 semanas, evitar treino intenso nas 24 a 48 horas anteriores e evitar carga proteica na véspera. Sem esse preparo, o exame mede o treino, não o rim.'},
+  {k:'avalFisica', rot:'Próxima avaliação física', ic:'📆', modo:'agenda', d:'2026-10-15',
+   t:'Próxima avaliação física',
+   m:'Mantenha o mesmo avaliador e o mesmo protocolo de dobras. A dobra abdominal é o marcador-chave.'}
+];
+
+/* NOTAS: as justificativas específicas de uma pessoa. Perfil sem nota usa o texto genérico. */
+const NOTAS_RODOLFO = {
+  dosesAcima:'O plano fixou 5 doses por dia de fim de semana. Cada dose além disso repõe o excedente que travou o peso em 91 kg por um ano — e o álcool deposita preferencialmente na região abdominal, justamente a dobra que subiu de 26 para 30 mm.',
+  dosesTeto:'O teto do plano é 5. Alterne cada dose com um copo de água: a hidratação importa por causa da creatina.',
+  jantar:'O jantar das 19h30 é a mudança central deste plano. Sem ele, voltam as ~9 horas só com líquido antes de dormir — o padrão que coincide com a alta da dobra abdominal entre abril e julho.',
+  saturada:'Seu colesterol total está no limite ou acima na maioria das coletas desde 2013 e o LDL chegou a 145 em 10/2024. O perfil lipídico é o seu principal alvo dietético.',
+  agua:'Você toma 7 g de creatina por dia. Hidratação adequada é um dos fatores de proteção renal com maior respaldo, e pesa na leitura da sua creatinina.',
+  fds:'Os dois dias do fim de semana somavam ~5.940 kcal extras — o dobro do que toda a semana de treino queima. É aqui que o resultado é decidido.',
+  destaqueT:'Prioridade da próxima consulta',
+  destaqueM:'Cistatina C com TFGe pela equação combinada CKD-EPI, e relação albumina/creatinina urinária. São os exames que resolvem a dúvida renal de forma independente da massa muscular. Toda a premissa de 2,23 g/kg de proteína depende disso.',
+  contexto:'Meu plano: perder gordura preservando massa magra. Colesterol/LDL no limite há anos e função renal a esclarecer com cistatina C. RM de 08082026 com espondilólise de L5, anterolistese grau I e estenose foraminal acentuada em L5-S1.',
+  base:'panorama de saúde de 25072026, plano nutricional de 28072026 e RM de coluna de 08082026'
+};
+
+/* ---- perfil EM BRANCO: nasce sem nada e é montado por importação ---- */
+function vazio(nome){
+  return {
+    v:4, nome:nome||'Novo perfil', criado:hoje(),
+    cfg:{peso:70, aguaMeta:2500, kcalSem:2000, kcalFds:2000, protMeta:100, carbMeta:220, gordMeta:60,
+         protMin:80, dosesMax:2, diaPeso:1},
+    plano:[], labs:[], estrutural:[], perguntas:[], prazos:[], cuidados:[], rot:{}, notas:{},
+    destaque:null, contexto:'', base:'',
+    dias:{}, treinos:{}, bib:{}, medidas:[], atualizacoes:[]
+  };
+}
+/* ---- perfil SEMENTE (o do Rodolfo): tudo que a versão 3 já tinha ---- */
+function base(){
+  const b = vazio('Rodolfo');
+  b.cfg = {peso:91, aguaMeta:3500, kcalSem:3054, kcalFds:3400, protMeta:203, carbMeta:359, gordMeta:99,
+           protMin:180, dosesMax:5, diaPeso:1};
+  b.plano = JSON.parse(JSON.stringify(PLANO_PADRAO));
+  b.labs = JSON.parse(JSON.stringify(LABS_PADRAO));
+  b.estrutural = JSON.parse(JSON.stringify(ESTRUTURAL_PADRAO));
+  b.perguntas = PERGUNTAS_PADRAO.slice();
+  b.prazos = JSON.parse(JSON.stringify(PRAZOS_PADRAO));
+  b.cuidados = cuidadosSemente();
+  b.notas = Object.assign({}, NOTAS_RODOLFO);
+  b.destaque = {t:NOTAS_RODOLFO.destaqueT, m:NOTAS_RODOLFO.destaqueM};
+  b.contexto = NOTAS_RODOLFO.contexto;
+  b.base = NOTAS_RODOLFO.base;
+  for(const k in TREINO_SEED){ b.bib[k] = TREINO_SEED[k].ex.slice(); b.rot[k] = TREINO_SEED[k].rot; }
+  return b;
+}
+function nota(k, generico){ return (S.notas && S.notas[k]) || generico; }
+
+/* ---- o banco do APARELHO: vários perfis + qual está ativo + a trava deste aparelho ---- */
+function dbVazio(){ return {v:1, perfis:{}, atual:'', disp:{fixo:'', master:false}}; }
+function novoId(){ return 'p'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36); }
+
+let DB = carregarDB();
+let S  = DB.perfis[DB.atual] || vazio('—');
+let dia = hoje();
+let aba = 'hoje';
+let abertos = new Set(['r8']);
+let fotoPendente = null;
+
+function hoje(){ return new Date().toLocaleDateString('sv'); }
+function carregarDB(){
+  try{
+    const r = JSON.parse(localStorage.getItem(KEY));
+    if(r && r.perfis) return arrumarDB(r);
+    /* nenhum banco novo: procura um backup da versão 1 nesta mesma origem e adota como perfil */
+    const antigo = JSON.parse(localStorage.getItem('rodsaude_v1'));
+    if(antigo && (antigo.dias || antigo.treinos)){
+      const db = dbVazio(), id = novoId();
+      db.perfis[id] = migrar(mesclar(base(), antigo));
+      db.perfis[id].nome = 'Rodolfo';
+      db.atual = id; db.disp = {fixo:id, master:true};
+      return db;
+    }
+  }catch(e){}
+  return dbVazio();
+}
+function arrumarDB(r){
+  const db = Object.assign(dbVazio(), r);
+  db.disp = Object.assign({fixo:'', master:false}, r.disp||{});
+  db.perfis = db.perfis || {};
+  for(const id in db.perfis) db.perfis[id] = migrar(mesclar(vazio('—'), db.perfis[id]));
+  if(!db.perfis[db.atual]) db.atual = Object.keys(db.perfis)[0] || '';
+  return db;
+}
+function mesclar(b, n){
+  const o = Object.assign({}, b, n);
+  o.cfg = Object.assign({}, b.cfg, n.cfg||{});
+  o.bib = Object.assign({}, b.bib, n.bib||{});
+  o.rot = Object.assign({}, b.rot, n.rot||{});
+  o.notas = Object.assign({}, b.notas, n.notas||{});
+  ['plano','labs','estrutural','perguntas','prazos','cuidados'].forEach(k=>{
+    o[k] = (n[k] && n[k].length) ? n[k] : b[k];
+  });
+  o.atualizacoes = n.atualizacoes || b.atualizacoes || [];
+  return o;
+}
+function migrar(o){
+  /* v1 -> v2: extras sem refeição passam a pertencer à 8ª refeição */
+  Object.values(o.dias||{}).forEach(d=>{ (d.extras||[]).forEach(e=>{ if(!e.ref) e.ref='r8'; }); });
+  /* v2 -> v3: programa ABCDE de 15082026, biblioteca substituída, HISTÓRICO PRESERVADO */
+  if((o.v||0) < 3 && Object.keys(o.bib||{}).length){
+    o.bib = {};
+    for(const k in TREINO_SEED) o.bib[k] = TREINO_SEED[k].ex.slice();
+    o.atualizacoes = (o.atualizacoes||[]).concat([{d:'2026-08-15', txt:'Programa ABCDE — biblioteca de exercícios substituída. Histórico preservado.'}]);
+  }
+  /* v3 -> v4: o objeto 'exames' vira a lista 'prazos', que cada perfil monta a seu modo */
+  if((o.v||0) < 4){
+    if(o.exames && typeof o.exames==='object'){
+      o.prazos = (o.prazos && o.prazos.length ? o.prazos : JSON.parse(JSON.stringify(PRAZOS_PADRAO)));
+      o.prazos.forEach(p=>{ if(o.exames[p.k] !== undefined) p.d = o.exames[p.k]; });
+      delete o.exames;
+    }
+    if(!o.cuidados || !o.cuidados.length) o.cuidados = [];
+    if(!o.nome) o.nome = 'Perfil';
+  }
+  o.rot = o.rot || {}; o.notas = o.notas || {};
+  o.bib = o.bib || {};
+  o.v = 4; return o;
+}
+function salvar(){ try{ DB.perfis[DB.atual] = S; localStorage.setItem(KEY, JSON.stringify(DB)); }
+  catch(e){ msg('Falha ao salvar'); } }
+function prazo(k){ return (S.prazos||[]).find(p=>p.k===k) || null; }
+
+/* ---- troca de perfil ---- */
+function podeTrocar(){ return DB.disp.master || !DB.disp.fixo; }
+function trocarPerfil(id){
+  if(!DB.perfis[id]) return;
+  if(!podeTrocar()){ msg('Este aparelho está fixado num perfil'); return; }
+  salvar(); DB.atual = id; S = DB.perfis[id];
+  localStorage.setItem(KEY, JSON.stringify(DB));
+  dia = hoje(); abertos = new Set(['r8']); render(); msg('Perfil: '+S.nome);
+}
+function criarPerfil(nome, semente){
+  const id = novoId();
+  DB.perfis[id] = semente ? base() : vazio(nome);
+  DB.perfis[id].nome = nome;
+  DB.atual = id; S = DB.perfis[id];
+  localStorage.setItem(KEY, JSON.stringify(DB));
+  return id;
+}
+function liberarMaster(){
+  const c = prompt('Código master deste aparelho:');
+  if(c === null) return;
+  if(c.trim().toUpperCase() !== CODIGO_MESTRE){ msg('Código incorreto'); return; }
+  DB.disp.master = true; salvar(); render(); msg('Acesso master liberado neste aparelho');
+}
+function tirarMaster(){
+  if(!confirm('Tirar o acesso master deste aparelho? Ele volta a ficar preso ao perfil atual.')) return;
+  DB.disp.master = false; DB.disp.fixo = DB.atual; salvar(); render(); msg('Aparelho fixado em '+S.nome);
+}
+
+function refeicoes(){ return S.plano.concat([REF_EXTRA]); }
+function D(d){ if(!S.dias[d]) S.dias[d]={plano:{},extras:[],agua:0,obs:''}; return S.dias[d]; }
+/* Dor() é LEITURA e não grava nada — só assim ver um dia não cria registro vazio no backup.
+   Para escrever, use dorRW(), e vazio volta a ser ausência. */
+function Dor(d){ return (D(d).dor) || {n:null, locais:[], sint:[], obs:''}; }
+function dorRW(d){ const dd=D(d); if(!dd.dor) dd.dor={n:null, locais:[], sint:[], obs:''}; return dd.dor; }
+function dorVazia(x){ return !x || (x.n==null && !(x.locais||[]).length && !(x.sint||[]).length && !x.obs); }
+function podarDor(d){ const dd=D(d); if(dorVazia(dd.dor)) delete dd.dor; }
+function temDor(d){ const x=(D(d)||{}).dor; return !!(x && (x.n!==null && x.n!==undefined || (x.locais||[]).length || (x.sint||[]).length || x.obs)); }
+function alarmesDe(d){ const x=(D(d)||{}).dor; if(!x) return [];
+  return (x.sint||[]).filter(s=>DOR_SINTOMAS.some(y=>y.n===s && y.alarme)); }
+function T(d){ if(!S.treinos[d]) S.treinos[d]={tipo:'',ex:[],cardio:{km:'',min:'',pse:''},obs:''}; return S.treinos[d]; }
+
+/* ---------- 6. CÁLCULOS ---------- */
+function fds(d){ const w = new Date(d+'T12:00').getDay(); return w===0||w===6; }
+function metaDia(d){
+  const f = fds(d), c = S.cfg;
+  return f ? {kcal:c.kcalFds, p:c.protMeta, cb:Math.round(c.carbMeta*1.1), g:Math.round(c.gordMeta*1.1)}
+           : {kcal:c.kcalSem, p:c.protMeta, cb:c.carbMeta, g:c.gordMeta};
+}
+function totais(d){
+  const dd = D(d); let t={kcal:0,p:0,c:0,g:0,sat:0,doses:0,agua:dd.agua||0,itens:0};
+  S.plano.forEach(r=>r.itens.forEach((it,i)=>{
+    const q = dd.plano[r.id+'-'+i];
+    if(q){ t.kcal+=it.kcal*q; t.p+=it.p*q; t.c+=it.c*q; t.g+=it.g*q; t.itens++;
+           if(it.agua) t.agua += it.agua*q; }
+  }));
+  (dd.extras||[]).forEach(e=>{
+    const q = e.q||1;
+    t.kcal+=e.kcal*q; t.p+=e.p*q; t.c+=e.c*q; t.g+=e.g*q; t.itens++;
+    if(e.sat) t.sat += e.g*q;
+    if(e.dose) t.doses += e.dose*q;
+    if(e.agua) t.agua += e.agua*q;
+  });
+  ['kcal','p','c','g','sat','agua'].forEach(k=>t[k]=Math.round(t[k]));
+  t.doses = Math.round(t.doses*10)/10;
+  return t;
+}
+function extrasDe(d, rid){ return (D(d).extras||[]).map((e,i)=>({e,i})).filter(x=>(x.e.ref||'r8')===rid); }
+function refeicaoFeita(d, r){
+  const dd=D(d);
+  return r.itens.some((it,i)=>dd.plano[r.id+'-'+i]) || extrasDe(d, r.id).length>0;
+}
+function refeicaoCompleta(d, r){
+  if(!r.itens.length) return false;
+  const dd=D(d); return r.itens.every((it,i)=>dd.plano[r.id+'-'+i]);
+}
+function difDias(a,b){ return Math.round((new Date(b+'T12:00') - new Date(a+'T12:00'))/86400000); }
+function fmtData(d){
+  const dt=new Date(d+'T12:00');
+  const sem=['dom','seg','ter','qua','qui','sex','sáb'][dt.getDay()];
+  return sem+' '+String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0');
+}
+function ddmmaaaa(d){ if(!d) return '—'; const p=d.split('-'); return p[2]+p[1]+p[0]; }
+function isoOf(dd){ return dd.slice(4)+'-'+dd.slice(2,4)+'-'+dd.slice(0,2); }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function nn(x){ return (Math.round(x*10)/10).toString().replace('.',',')+'g'; }
+
+/* ---------- 7. MOTOR DE ALERTAS ---------- */
+function alertas(d){
+  const t = totais(d), m = metaDia(d), dd = D(d), c = S.cfg, a = [];
+  const ehHoje = d === hoje();
+  const hora = ehHoje ? new Date().getHours()+new Date().getMinutes()/60 : 23.9;
+  const f = fds(d);
+
+  if(t.doses > 0){
+    if(t.doses > c.dosesMax)
+      a.push(['crit','🍺','Acima do combinado: '+t.doses+' doses',
+        nota('dosesAcima','O teto combinado é de '+c.dosesMax+' doses. O álcool é a fonte calórica mais fácil de esquecer e a que mais deposita na região abdominal.')]);
+    else if(t.doses >= 4)
+      a.push(['warn','🍺', t.doses+' doses — atenção ao teto',
+        nota('dosesTeto','O teto é '+c.dosesMax+'. Alterne cada dose com um copo de água.')]);
+    else
+      a.push(['info','🍺', t.doses+' dose(s) registrada(s)',
+        'Anotar as doses é a variável que decide o resultado. Coma proteína antes de beber.']);
+  }
+  if(hora >= 20 || t.itens >= 20){
+    if(t.p < c.protMin)
+      a.push(['warn','🥩','Proteína em '+t.p+' g — abaixo do alvo',
+        'O alvo é '+c.protMeta+' g ('+(c.protMeta/c.peso).toFixed(2).replace('.',',')+' g/kg). Em déficit calórico com treino de força, a proteína é o que protege a massa magra. Uma opção rápida: iogurte grego, atum ou ovos.']);
+    else
+      a.push(['good','🥩','Proteína em '+t.p+' g — alvo cumprido','']);
+  }
+  if(hora >= 21 && S.plano[6] && !refeicaoFeita(d, S.plano[6]))
+    a.push(['warn','🍽️','O jantar não foi registrado',
+      nota('jantar','A última refeição do dia sustenta a proteína e evita a janela longa sem comida antes de dormir.')]);
+  if(t.sat >= 30)
+    a.push(['warn','🧀','Carga alta de gordura saturada hoje (~'+t.sat+' g em itens saturados)',
+      nota('saturada','Carga alta de gordura saturada num dia só. Vale observar a média da semana.')]);
+  if(t.agua > 0){
+    const pct = t.agua / c.aguaMeta;
+    if(hora >= 18 && pct < 0.7)
+      a.push(['warn','💧','Hidratação em '+(t.agua/1000).toFixed(1).replace('.',',')+' L de '+(c.aguaMeta/1000).toFixed(1).replace('.',',')+' L',
+        nota('agua','Hidratação abaixo do previsto para o horário.')]);
+    else if(pct >= 1)
+      a.push(['good','💧','Meta de água cumprida','']);
+  }
+  if(t.kcal > m.kcal * 1.15)
+    a.push(['warn','🔥','Calorias em '+t.kcal+' — acima da meta de '+m.kcal,
+      'Um dia acima não desfaz a semana. O que desfaz é a soma de sábado e domingo.']);
+  else if(t.kcal >= m.kcal*0.9 && t.kcal <= m.kcal*1.05 && t.itens>10)
+    a.push(['good','🎯','Dia dentro da meta calórica','']);
+  if(f && t.itens===0)
+    a.push(['info','📅','Fim de semana: meta de '+m.kcal+' kcal e teto de '+c.dosesMax+' doses',
+        nota('fds','O fim de semana costuma ser onde a semana inteira é decidida.')]);
+
+  const dt = new Date(d+'T12:00');
+  if(ehHoje && dt.getDay() === c.diaPeso){
+    const ultima = S.medidas.length ? S.medidas[S.medidas.length-1] : null;
+    if(!ultima || difDias(ultima.data, d) >= 6)
+      a.push(['info','⚖️','Hoje é dia de pesagem',
+        'Em jejum, antes do treino, mesmo dia da semana. Registre na aba Medidas. Não pese diariamente.']);
+  }
+  /* ----- dor ----- */
+  const alarmes = alarmesDe(d);
+  if(alarmes.length)
+    a.push(['crit','🚨','SINAL NEUROLÓGICO MARCADO HOJE: '+alarmes.join(', '),
+      'Isto muda a categoria do problema. Não espere a consulta agendada: procure atendimento. Se houver dormência na região da sela ou qualquer alteração para urinar ou evacuar, vá ao pronto-socorro hoje — são os sinais que ninguém deixa para amanhã.']);
+  const dorHoje = (D(d).dor||{}).n;
+  if(dorHoje!=null){
+    if(dorHoje>=7)
+      a.push(['crit','📈','Dor em '+dorHoje+'/10',
+        'Nível alto. Registre o que estava fazendo quando piorou — essa informação vale mais para o especialista do que o número sozinho. Considere poupar carga axial hoje.']);
+    else if(dorHoje>=4)
+      a.push(['warn','📈','Dor em '+dorHoje+'/10',
+        'Dor moderada registrada. Vá anotando todo dia: a curva importa mais que o ponto.']);
+  }
+  else if(ehHoje && hora>=20 && difDias(d, hoje())===0)
+    a.push(['info','📈','Dor de hoje ainda não registrada',
+      'Trinta segundos por dia constroem o gráfico que o especialista vai querer ver. Zero também é resposta.']);
+
+  /* ----- prazos e pendências DESTE perfil ----- */
+  (S.prazos||[]).forEach(p=>{
+    if(p.modo === 'pendente'){
+      if(!p.d) a.push(['crit', p.ic||'🔔', p.t, p.m||'']);
+      return;
+    }
+    if(!p.d) return;
+    const dias = difDias(d, p.d);
+    if(dias <= 30 && dias >= 0)
+      a.push([dias<=7?'warn':'info', p.ic||'📆', p.t+' em '+dias+' dia(s) — '+ddmmaaaa(p.d), p.m||'']);
+    else if(dias < 0)
+      a.push(['warn', p.ic||'📆', p.t+' venceu há '+(-dias)+' dia(s)', 'Reagende na aba Saúde.']);
+  });
+  return a;
+}
+
+/* ---------- 8. CABEÇALHO ---------- */
+function renderTopo(){
+  document.getElementById('dlbl').textContent = dia===hoje() ? 'hoje, '+fmtData(dia) : fmtData(dia);
+  const t = totais(dia), m = metaDia(dia);
+  const bd = document.getElementById('bdg');
+  bd.textContent = fds(dia) ? 'fim de semana' : 'dia de semana';
+  bd.className = 'badge'+(fds(dia)?' fds':'');
+  const cel = (lb, v, meta, un, cls)=>{
+    const pct = Math.min(100, meta? v/meta*100 : 0);
+    let k = cls||''; if(!k){ k = pct>=95 && pct<=110 ? 'ok' : (pct>110?'over':''); }
+    return `<div class="meta"><div class="lb">${lb}</div>
+      <div class="vl">${v}<small>/${meta}${un||''}</small></div>
+      <div class="bar"><i class="${k}" style="width:${pct}%"></i></div></div>`;
+  };
+  document.getElementById('metas').innerHTML =
+    cel('kcal', t.kcal, m.kcal, '') + cel('prot', t.p, m.p, 'g', t.p>=S.cfg.protMin?'ok':'pr') +
+    cel('carb', t.c, m.cb, 'g') + cel('gord', t.g, m.g, 'g');
+}
+
+/* ---------- 9. ABA HOJE ---------- */
+function renderHoje(){
+  const dd = D(dia), t = totais(dia);
+  let h = '';
+  const al = alertas(dia);
+  if(al.length) h += al.map(([tp,ic,tt,ms])=>
+    `<div class="alert a-${tp}"><span class="ic">${ic}</span><div><b>${tt}</b>${ms?ms:''}</div></div>`).join('');
+
+  /* ----- registro de dor ----- */
+  const dr = Dor(dia), abDor = abertos.has('dor'), nv = dr.n;
+  const cls = nv==null?'':(nv>=7?'a':(nv>=4?'m':''));
+  h += `<div class="card"${nv>=7?' style="border-color:#5c2429"':''}>
+    <div class="chead ${abDor?'open':''}" onclick="toggleCard('dor')">
+      <span class="hora">DOR</span>
+      <span class="nm">Dor de hoje</span>
+      <span class="kc">${nv==null?'não registrada':nv+'/10'}${(dr.locais||[]).length?' · '+dr.locais.length+' local(is)':''}</span>
+      <span class="cv">▸</span></div>
+    <div class="cbody ${abDor?'open':''}">
+      <div style="padding-top:10px">
+        <div style="font-size:12.5px;font-weight:600;color:var(--tx2)">Intensidade agora</div>
+        <div class="dorEsc">${Array.from({length:11},(_,i)=>
+          `<button class="${nv===i?'on '+(i>=7?'a':(i>=4?'m':'')):''}" onclick="setDor('n',${nv===i?'null':i})">${i}</button>`).join('')}</div>
+        <div class="dorLb"><span>0 · sem dor</span><span>10 · a pior possível</span></div>
+
+        <div style="font-size:12.5px;font-weight:600;color:var(--tx2);margin-top:14px">Onde dói</div>
+        <div class="chip2">${DOR_LOCAIS.map(l=>
+          `<button class="${(dr.locais||[]).includes(l)?'on':''}" onclick="togDor('locais',${JSON.stringify(l).replace(/"/g,'&quot;')})">${esc(l)}</button>`).join('')}</div>
+
+        <div style="font-size:12.5px;font-weight:600;color:var(--tx2);margin-top:14px">Como é a dor</div>
+        <div class="chip2">${DOR_SINTOMAS.map(s=>
+          `<button class="${s.alarme?'al ':''}${(dr.sint||[]).includes(s.n)?'on':''}" onclick="togDor('sint',${JSON.stringify(s.n).replace(/"/g,'&quot;')})">${esc(s.n)}</button>`).join('')}</div>
+        <div class="muted" style="margin-top:7px">Os itens em vermelho são sinais neurológicos. Marcar qualquer um deles faz o app avisar para procurar atendimento sem esperar.</div>
+
+        <div style="font-size:12.5px;font-weight:600;color:var(--tx2);margin-top:14px">Observação</div>
+        <textarea rows="2" placeholder="o que piorou, o que aliviou, em que momento do dia…" onchange="setDor('obs',this.value)">${esc(dr.obs||'')}</textarea>
+        <div class="rowb"><button class="btn sm" onclick="limparDor()">Limpar o dia</button>
+          <button class="btn c sm" onclick="enviarClaude('dor')">Enviar histórico de dor</button></div>
+        <div class="muted" style="margin-top:9px">Anotar todo dia transforma "as dores aumentaram" numa curva que o especialista lê em segundos, e mostra se algum treino específico piora.</div>
+      </div>
+    </div></div>`;
+
+  refeicoes().forEach(r=>{
+    const ex = extrasDe(dia, r.id);
+    const feita = refeicaoFeita(dia,r), comp = refeicaoCompleta(dia,r);
+    let sk=0,sp=0;
+    r.itens.forEach((it,i)=>{ const q=dd.plano[r.id+'-'+i]; if(q){sk+=it.kcal*q;sp+=it.p*q;} });
+    ex.forEach(({e})=>{ const q=e.q||1; sk+=e.kcal*q; sp+=e.p*q; });
+    const tk = Math.round(r.itens.reduce((a,b)=>a+b.kcal*defQ(b),0)),
+          tp = r.itens.reduce((a,b)=>a+b.p*defQ(b),0);
+    const aberto = abertos.has(r.id);
+    const resumo = r.livre
+      ? (ex.length? Math.round(sk)+' kcal · '+Math.round(sp)+'g P' : 'nada aqui')
+      : (feita? Math.round(sk)+'/'+tk+' kcal · '+Math.round(sp)+'g P' : tk+' kcal · '+Math.round(tp)+'g P');
+
+    h += `<div class="card ${comp?'done':''}">
+      <div class="chead ${aberto?'open':''}" data-k="${r.id}" onclick="toggleCard('${r.id}')">
+        <span class="hora">${r.hora}</span>
+        <span class="nm">${r.nome}</span>
+        <span class="kc">${resumo}</span>
+        <span class="cv">▸</span>
+      </div>
+      <div class="cbody ${aberto?'open':''}">
+        ${r.itens.map((it,i)=>{
+          const key=r.id+'-'+i, q=dd.plano[key];
+          return `<div class="item ${q?'on':''}">
+            <div class="chk ${q?'on':''}" onclick="marcar('${key}')">✓</div>
+            <div class="txt">${esc(it.n)}${defQ(it)!==1?` <b style="color:var(--ac)">${arr(defQ(it))}x</b>`:''}
+              <div class="mac">a unidade: ${arr(it.kcal)} kcal · P ${nn(it.p)} · C ${nn(it.c)} · G ${nn(it.g)}${q?` &nbsp;→&nbsp; <b style="color:var(--tx2)">${Math.round(it.kcal*q)} kcal · P ${nn(it.p*q)}</b>`:''}</div></div>
+            <div class="qtd">${q?`<select onchange="qtdPlano('${key}',this.value)">${optsQtd(q)}</select>`:''}</div>
+          </div>`;
+        }).join('')}
+        ${ex.map(({e,i})=>`<div class="item on livre">
+            <div class="chk on" style="background:var(--wa);border-color:var(--wa);color:#2d2410">+</div>
+            <div class="txt">${esc(e.n)}${e.est?' <span style="font-size:10px;color:var(--tx3)">(estimado)</span>':''}
+              <div class="mac">${Math.round(e.kcal*(e.q||1))} kcal · P ${nn(e.p*(e.q||1))} · C ${nn(e.c*(e.q||1))} · G ${nn(e.g*(e.q||1))}${e.dose?' · '+arr(e.dose*(e.q||1))+' dose':''}</div></div>
+            <div class="qtd"><select onchange="qtdExtra(${i},this.value)">${optsQtd(e.q||1)}</select></div>
+            <button class="rmv" onclick="delExtra(${i})">✕</button></div>`).join('')}
+        ${(!r.itens.length && !ex.length)? '<div class="muted" style="padding:8px 0">Tudo que não se encaixa nas refeições do plano entra aqui: um doce, uma fruta fora de hora, o que se come na rua.</div>':''}
+        <div class="rowb">
+          ${r.itens.length?`<button class="btn g sm" onclick="marcarTudo('${r.id}',1)">Registrar tudo</button>
+          <button class="btn sm" onclick="marcarTudo('${r.id}',0)">Limpar</button>`:''}
+          <button class="btn p sm" onclick="sheetExtra('${r.id}')">+ item nesta refeição</button>
+          <button class="btn c sm" onclick="sheetFoto('${r.id}')">📷 foto</button>
+        </div>
+      </div></div>`;
+  });
+
+  h += `<div class="card"><div class="ctr">
+      <div class="lbl"><b>Água</b><span>meta ${(S.cfg.aguaMeta/1000).toFixed(1).replace('.',',')} L — a creatina pede hidratação</span></div>
+      <button class="stp" onclick="agua(-250)">−</button>
+      <div class="num">${(t.agua/1000).toFixed(2).replace('.',',')}<small style="font-size:11px;color:var(--tx3)"> L</small></div>
+      <button class="stp" onclick="agua(250)">+</button>
+    </div>
+    <div style="padding:0 13px 12px"><div class="bar"><i class="${t.agua>=S.cfg.aguaMeta?'ok':''}" style="width:${Math.min(100,t.agua/S.cfg.aguaMeta*100)}%"></i></div>
+    <div class="muted" style="margin-top:6px">Copos de 250 ml. O que vem do pré-treino e da vitamina já entra sozinho.</div></div></div>`;
+
+  h += `<div class="card"><div class="pad">
+      <div class="sec" style="margin-top:0">Como foi o dia</div>
+      <textarea rows="2" placeholder="fome, sono, disposição, o que saiu do plano…" onchange="obsDia(this.value)">${esc(dd.obs||'')}</textarea>
+    </div></div>`;
+
+  document.getElementById('t-hoje').innerHTML = h;
+}
+function toggleCard(id){ if(abertos.has(id)) abertos.delete(id); else abertos.add(id); render(); }
+function defQ(it){ return (it && it.q) ? it.q : 1; }
+function itemDe(key){
+  const p = key.split('-'), r = refeicoes().find(x=>x.id===p[0]);
+  return r ? r.itens[+p[1]] : null;
+}
+function marcar(key){
+  const dd=D(dia);
+  if(dd.plano[key]) delete dd.plano[key]; else dd.plano[key]=defQ(itemDe(key));
+  salvar(); render();
+}
+function arr(x){ return (Math.round(x*100)/100).toString().replace('.',','); }
+
+/* opções de quantidade: passos fixos + o valor atual + "outro…" para qualquer número */
+function optsQtd(q){
+  q = parseFloat(q)||1;
+  const passos = [0.25,0.5,0.75,1,1.25,1.5,1.75,2,2.5,3,4,5,6,7,8,9,10,12];
+  if(!passos.includes(q)) passos.push(q);
+  passos.sort((a,b)=>a-b);
+  return passos.map(v=>`<option value="${v}" ${v===q?'selected':''}>${arr(v)}x</option>`).join('')
+    + `<option value="__">outro…</option>`;
+}
+function qtdPlano(key,v){
+  if(v==='__'){ sheetQtd('plano', key, D(dia).plano[key]||1); return; }
+  D(dia).plano[key]=parseFloat(v); salvar(); render();
+}
+function qtdExtra(i,v){
+  const e = D(dia).extras[i]; if(!e) return;
+  if(v==='__'){ sheetQtd('extra', i, e.q||1); return; }
+  e.q = parseFloat(v); salvar(); render();
+}
+function sheetQtd(tipo, ref, atual){
+  abrir(`<h3>Quantidade</h3>
+    <div class="sub">Qualquer número, inclusive fração. 1 significa a porção do plano; 3 significa o triplo dela.</div>
+    <div class="fgrid"><div class="f1"><label>Quantas porções</label>
+      <input type="number" inputmode="decimal" step="0.25" min="0.05" id="q_v" value="${atual}" autofocus></div></div>
+    <div class="rowb"><button class="btn p wide" onclick="salvarQtd('${tipo}','${ref}')">Aplicar</button>
+      <button class="btn wide" onclick="fechar();render()">Cancelar</button></div>`);
+  setTimeout(()=>{ const el=document.getElementById('q_v'); if(el){ el.focus(); el.select(); } },60);
+}
+function salvarQtd(tipo, ref){
+  const v = parseFloat(String((document.getElementById('q_v')||{}).value||'').replace(',','.'));
+  if(!v || v<=0){ msg('Informe um número maior que zero'); return; }
+  if(tipo==='plano') D(dia).plano[ref]=v;
+  else { const e=D(dia).extras[parseInt(ref,10)]; if(e) e.q=v; }
+  salvar(); fechar(); render(); msg('Quantidade: '+arr(v)+'x');
+}
+function marcarTudo(rid, on){
+  const r = refeicoes().find(x=>x.id===rid), dd=D(dia);
+  r.itens.forEach((it,i)=>{ const k=rid+'-'+i; if(on) dd.plano[k]=dd.plano[k]||defQ(it); else delete dd.plano[k]; });
+  salvar(); render();
+}
+function setDor(campo, val){ const dr=dorRW(dia);
+  dr[campo] = (val===null||val==='')?(campo==='n'?null:''):val;
+  podarDor(dia); salvar(); render(); }
+function togDor(campo, item){ const dr=dorRW(dia); const a=(dr[campo]||[]).slice();
+  const i=a.indexOf(item); if(i>=0) a.splice(i,1); else a.push(item);
+  dr[campo]=a; podarDor(dia); salvar(); render(); }
+function limparDor(){ const dd=D(dia); delete dd.dor; salvar(); render(); msg('Dor do dia limpa'); }
+function agua(ml){ const dd=D(dia); dd.agua=Math.max(0,(dd.agua||0)+ml); salvar(); render(); }
+function obsDia(v){ D(dia).obs=v; salvar(); }
+function delExtra(i){ D(dia).extras.splice(i,1); salvar(); render(); }
+
+/* ---------- 10. ABA TREINO ---------- */
+function renderTreino(){
+  const tr = T(dia);
+  const tipos = [['A','A'],['B','B'],['C','C'],['D','D'],['D2','D2'],['E','E'],['run','🏃'],['off','😴']];
+  let h = `<div class="tsel">${tipos.map(([v,lb])=>
+    `<button class="${tr.tipo===v?'on':''} ${v==='off'?'rest':''}" onclick="setTipo('${v}')">${lb}</button>`).join('')}</div>`;
+
+  if(!tr.tipo){
+    h += `<div class="card"><div class="pad muted">Escolha o treino do dia acima. A carga da última vez aparece sozinha em cada exercício, para você só superar o número.</div></div>`;
+    document.getElementById('t-treino').innerHTML = h; return;
+  }
+  if(tr.tipo==='off'){
+    h += `<div class="alert a-info"><span class="ic">😴</span><div><b>Dia de descanso</b>Recuperação faz parte do programa. Mantenha a proteína e a hidratação.</div></div>` + obsTreino(tr);
+    document.getElementById('t-treino').innerHTML = h; return;
+  }
+  if(tr.tipo==='D2' && S.rot && S.rot.D2){
+    h += `<div class="alert a-info"><span class="ic">🛡️</span><div><b>Versão sem carga axial</b>Use no lugar do Treino D enquanto o especialista em coluna não avaliar a estenose foraminal de L5-S1, se ele suspender carga axial, ou em qualquer dia de coluna sensível. Saem o terra e o stiff, que terminam com a lombar em extensão sob carga — e é na extensão que o forame se fecha. Não é sessão inferior: a cadeia posterior recebe 11 séries aqui, contra 9 no D.</div></div>`;
+  }
+  if(tr.tipo==='D' && S.rot && S.rot.D2){
+    h += `<div class="alert a-warn"><span class="ic">🔀</span><div><b>Existe a versão D2, sem carga axial</b>A RM de 08082026 descreve estenose foraminal acentuada em L5-S1 com compressão das raízes emergentes, maior à esquerda. Se hoje a coluna estiver sensível, ou se o especialista tiver restringido carga axial, troque para o botão D2.</div></div>`;
+  }
+  if(S.rot && S.rot[tr.tipo]){
+    h += `<div class="card"><div class="pad"><b>${esc(S.rot[tr.tipo])}</b>
+      <div class="muted" style="margin-top:4px">Antes de tudo: 15 min de mobilidade. Aquecimento de no máximo 2 séries por exercício principal, e nunca acima de 40% da tonelagem de trabalho.</div></div></div>`;
+  }
+  if(tr.tipo!=='run'){
+    const cuid = new Set();
+    const CU = cuidadosDe();
+    tr.ex.forEach(e=>CU.forEach(c=>{ if(c.re.test(e.nome)) cuid.add(c.t+'§'+c.m); }));
+    if(cuid.size) h += [...cuid].map(x=>{const [t,m]=x.split('§');
+      return `<div class="alert a-warn"><span class="ic">⚠️</span><div><b>${t}</b>${m}</div></div>`;}).join('');
+
+    h += tr.ex.map((e,i)=>{
+      const ant = ultimaCarga(e.nome, dia);
+      return `<div class="ex">
+        <div class="exh"><span class="n">${esc(e.nome)}</span>
+          <button class="btn sm" onclick="addSerie(${i})">+ série</button>
+          <button class="rmv" onclick="delEx(${i})">✕</button></div>
+        ${ant?`<div class="prev">última (${fmtData(ant.d)}): ${ant.txt}</div>`:''}
+        <div class="shead"><span>#</span><span>reps</span><span>carga kg</span><span>RPE</span><span></span></div>
+        ${e.series.map((s,j)=>`<div class="serie">
+          <span class="ix">${j+1}</span>
+          <input type="number" inputmode="numeric" value="${s.reps??''}" placeholder="—" onchange="setSerie(${i},${j},'reps',this.value)">
+          <input type="number" inputmode="decimal" step="0.5" value="${s.carga??''}" placeholder="—" onchange="setSerie(${i},${j},'carga',this.value)">
+          <input type="number" inputmode="numeric" min="1" max="10" value="${s.rpe??''}" placeholder="—" onchange="setSerie(${i},${j},'rpe',this.value)">
+          <button class="rmv" onclick="delSerie(${i},${j})">✕</button>
+        </div>`).join('')}
+      </div>`;
+    }).join('');
+
+    h += `<div class="rowb"><button class="btn p sm" onclick="sheetEx()">+ Exercício</button>
+          <button class="btn sm" onclick="carregarBib()">Carregar treino ${tr.tipo}</button>
+          <button class="btn sm" onclick="salvarBib()">Salvar como treino ${tr.tipo}</button></div>`;
+  }
+  if(tr.tipo==='run' || (TREINO_SEED[tr.tipo]&&TREINO_SEED[tr.tipo].corrida)){
+    h += `<div class="card"><div class="pad">
+      <div class="sec" style="margin-top:0">Cardio</div>
+      <div class="fgrid">
+        <div><label>Distância (km)</label><input type="number" inputmode="decimal" step="0.1" value="${tr.cardio.km||''}" placeholder="3,0" onchange="setCardio('km',this.value)"></div>
+        <div><label>Tempo (min)</label><input type="number" inputmode="numeric" value="${tr.cardio.min||''}" placeholder="20" onchange="setCardio('min',this.value)"></div>
+        <div class="f1"><label>Percepção de esforço (1 a 10)</label><input type="number" inputmode="numeric" min="1" max="10" value="${tr.cardio.pse||''}" onchange="setCardio('pse',this.value)"></div>
+      </div>
+      <div class="muted">Programa de 15082026: cardio nos dias <b>A</b> (20 a 25 min de esteira em inclinação de 6 a 8%, ou elíptico) e <b>E</b> (25 a 30 min de elíptico, que é o de menor impacto axial dos cinco aparelhos do Spring). O Summer não tem cardio. Não aumente a comida por causa disso: o déficit já foi calculado sobre a média da semana.</div>
+    </div></div>`;
+  }
+  h += obsTreino(tr) + resumoSemanaTreino();
+  document.getElementById('t-treino').innerHTML = h;
+}
+function obsTreino(tr){
+  return `<div class="card"><div class="pad"><div class="sec" style="margin-top:0">Notas do treino</div>
+    <textarea rows="2" placeholder="dor, energia, o que travou…" onchange="setObsTr(this.value)">${esc(tr.obs||'')}</textarea></div></div>`;
+}
+function resumoSemanaTreino(){
+  const hj = new Date(dia+'T12:00'); let n=0, lista=[];
+  for(let i=6;i>=0;i--){
+    const d = new Date(hj); d.setDate(d.getDate()-i);
+    const k = d.toLocaleDateString('sv'), t = S.treinos[k];
+    const tp = t&&t.tipo ? (t.tipo==='off'?'·':(t.tipo==='run'?'🏃':t.tipo)) : '–';
+    if(t&&t.tipo&&t.tipo!=='off') n++;
+    lista.push(`<div style="text-align:center"><div style="font-size:9px;color:var(--tx3)">${['D','S','T','Q','Q','S','S'][d.getDay()]}</div><div style="font-weight:700;font-size:13px;margin-top:2px">${tp}</div></div>`);
+  }
+  return `<div class="card"><div class="pad">
+    <div class="sec" style="margin-top:0">Últimos 7 dias — ${n} treino(s)</div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">${lista.join('')}</div>
+    <div class="muted" style="margin-top:8px">Meta: 5 sessões por semana. Você treina sem interromper desde 26032023.</div>
+  </div></div>`;
+}
+function setTipo(t){
+  const tr=T(dia); tr.tipo = tr.tipo===t ? '' : t;
+  if(tr.tipo && tr.tipo!=='off' && tr.tipo!=='run' && !tr.ex.length) carregarBib(true);
+  salvar(); render();
+}
+function carregarBib(sil){
+  const tr=T(dia); (S.bib[tr.tipo]||[]).forEach(n=>{ if(!tr.ex.some(e=>e.nome===n)) tr.ex.push({nome:n, series:[serieVazia(n)]}); });
+  salvar(); if(!sil){ msg('Treino '+tr.tipo+' carregado'); render(); }
+}
+function salvarBib(){ const tr=T(dia); S.bib[tr.tipo]=tr.ex.map(e=>e.nome); salvar(); msg('Salvo como treino '+tr.tipo); }
+function serieVazia(nome){ const a=ultimaCarga(nome,dia); return a? {reps:a.reps,carga:a.carga,rpe:''} : {reps:'',carga:'',rpe:''}; }
+function ultimaCarga(nome, ate){
+  const ds = Object.keys(S.treinos).filter(d=>d<ate).sort().reverse();
+  for(const d of ds){
+    const e = (S.treinos[d].ex||[]).find(x=>x.nome===nome);
+    if(e && e.series.some(s=>s.carga)){
+      const boas = e.series.filter(s=>s.carga);
+      const top = boas.reduce((a,b)=>parseFloat(b.carga)>parseFloat(a.carga)?b:a);
+      return {d, reps:top.reps, carga:top.carga, txt: boas.map(s=>`${s.reps||'?'}×${s.carga}kg`).join('  ')};
+    }
+  }
+  return null;
+}
+function addSerie(i){ const e=T(dia).ex[i]; const l=e.series[e.series.length-1];
+  e.series.push(l?{reps:l.reps,carga:l.carga,rpe:''}:{reps:'',carga:'',rpe:''}); salvar(); render(); }
+function delSerie(i,j){ const e=T(dia).ex[i]; e.series.splice(j,1); if(!e.series.length) e.series.push({reps:'',carga:'',rpe:''}); salvar(); render(); }
+function delEx(i){ T(dia).ex.splice(i,1); salvar(); render(); }
+function setSerie(i,j,k,v){ T(dia).ex[i].series[j][k]= v===''?'':v; salvar(); }
+function setCardio(k,v){ T(dia).cardio[k]=v; salvar(); }
+function setObsTr(v){ T(dia).obs=v; salvar(); }
+
+/* ---------- 11. MEDIDAS ---------- */
+function renderMedidas(){
+  const ms = S.medidas.slice().sort((a,b)=>a.data<b.data?-1:1);
+  const ult = ms[ms.length-1];
+  let h = `<div class="card"><div class="pad">
+    <div class="sec" style="margin-top:0">Nova medida</div>
+    <div class="fgrid">
+      <div><label>Data</label><input type="date" id="m_data" value="${dia}"></div>
+      <div><label>Peso (kg)</label><input type="number" inputmode="decimal" step="0.1" id="m_peso" placeholder="${ult&&ult.peso?ult.peso:'91,0'}"></div>
+      <div><label>Cintura (cm)</label><input type="number" inputmode="decimal" step="0.5" id="m_cint" placeholder="93"></div>
+      <div><label>Abdômen (cm)</label><input type="number" inputmode="decimal" step="0.5" id="m_abd" placeholder="99"></div>
+      <div class="f1"><label>Observação</label><input id="m_obs" placeholder="em jejum, antes do treino"></div>
+    </div>
+    <button class="btn p" onclick="addMedida()">Registrar</button>
+    <div class="muted" style="margin-top:9px">Peso 1x por semana, em jejum, mesmo dia. Cintura e abdômen a cada duas semanas. A dobra abdominal (30 mm em 17072026) é o marcador-chave: foi a única que subiu entre abril e julho.</div>
+  </div></div>`;
+
+  h += `<div class="card"><div class="pad">
+    <div class="sec" style="margin-top:0">Referências</div>
+    <div class="kv"><span class="k">Peso atual registrado</span><span class="v">${ult&&ult.peso?ult.peso+' kg':'—'}</span></div>
+    <div class="kv"><span class="k">Meta de peso</span><span class="v">89,5 kg</span></div>
+    <div class="kv"><span class="k">Gordura corporal</span><span class="v">19,82% <em>Pollock 7 dobras, 17072026</em></span></div>
+    <div class="kv"><span class="k">Meta de gordura</span><span class="v">15% <em>≈ 5,2 kg, cerca de 11 semanas</em></span></div>
+    <div class="kv"><span class="k">Massa magra</span><span class="v">73,36 kg <em>preservar é a prioridade</em></span></div>
+    <div class="kv"><span class="k">Cintura / abdômen</span><span class="v">93 / 99 cm <em>17072026</em></span></div>
+    <div class="kv"><span class="k">Próxima avaliação física</span><span class="v">${ddmmaaaa(S.exames.avalFisica)}</span></div>
+  </div></div>`;
+
+  h += graficoDor();
+
+  if(ms.length){
+    h += `<div class="card"><div class="pad"><div class="sec" style="margin-top:0">Evolução</div>${grafico(ms)}
+      <div class="legend"><span><i style="background:var(--ac)"></i>peso</span><span><i style="background:var(--wa)"></i>abdômen</span></div></div></div>`;
+    h += `<div class="card"><div class="pad"><div class="sec" style="margin-top:0">Histórico</div>` +
+      ms.slice().reverse().map(m=>`<div class="kv">
+        <span class="k">${ddmmaaaa(m.data)}${m.obs?' <em style="display:block;font-size:10px">'+esc(m.obs)+'</em>':''}</span>
+        <span class="v">${m.peso?m.peso+' kg':''}${m.cintura?' · C '+m.cintura:''}${m.abdomen?' · A '+m.abdomen:''}
+          <button class="rmv" onclick="delMedida('${m.data}')">✕</button></span></div>`).join('') + `</div></div>`;
+  }
+  document.getElementById('t-medidas').innerHTML = h;
+}
+/* barras de dor dos últimos 30 dias, com destaque para os dias de sinal neurológico */
+function graficoDor(dias){
+  const N = dias||30, hj = new Date(dia+'T12:00'), pontos=[];
+  for(let i=N-1;i>=0;i--){
+    const dt=new Date(hj); dt.setDate(dt.getDate()-i);
+    const k=dt.toLocaleDateString('sv'); const x=(S.dias[k]||{}).dor;
+    pontos.push({k, n:(x&&x.n!=null)?x.n:null, al:alarmesDe(k).length>0, dia:dt.getDate()});
+  }
+  const comDado = pontos.filter(p=>p.n!=null);
+  if(!comDado.length) return `<div class="card"><div class="pad">
+    <div class="sec" style="margin-top:0">Dor — últimos ${N} dias</div>
+    <div class="muted">Nenhum registro ainda. O gráfico aparece a partir do primeiro dia anotado, na aba Hoje.</div></div></div>`;
+  const W=320,H=86,P=4, w=(W-2*P)/N;
+  const barras = pontos.map((p,i)=>{
+    const x=P+i*w;
+    if(p.n==null) return `<rect x="${x+.5}" y="${H-P-2}" width="${w-1}" height="2" fill="#25375a"/>`;
+    const alt=Math.max(2,(p.n/10)*(H-2*P));
+    const cor = p.al ? '#f87171' : (p.n>=7?'#fb7185':(p.n>=4?'#fbbf24':'#34d399'));
+    return `<rect x="${x+.5}" y="${H-P-alt}" width="${w-1}" height="${alt}" fill="${cor}" rx="1"/>`;
+  }).join('');
+  const media = (comDado.reduce((a,b)=>a+b.n,0)/comDado.length).toFixed(1).replace('.',',');
+  const ult7 = pontos.slice(-7).filter(p=>p.n!=null);
+  const m7 = ult7.length? (ult7.reduce((a,b)=>a+b.n,0)/ult7.length).toFixed(1).replace('.',',') : '—';
+  const nAl = pontos.filter(p=>p.al).length;
+  return `<div class="card"><div class="pad">
+    <div class="sec" style="margin-top:0">Dor — últimos ${N} dias</div>
+    <svg class="spark" style="height:86px" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <line x1="${P}" y1="${H-P-(7/10)*(H-2*P)}" x2="${W-P}" y2="${H-P-(7/10)*(H-2*P)}" stroke="#5c2429" stroke-width="1" stroke-dasharray="3 3"/>
+      ${barras}</svg>
+    <div class="legend"><span><i style="background:#34d399"></i>0 a 3</span><span><i style="background:#fbbf24"></i>4 a 6</span>
+      <span><i style="background:#fb7185"></i>7 ou mais</span><span><i style="background:#f87171"></i>com sinal neurológico</span></div>
+    <div class="kv" style="margin-top:9px"><span class="k">Dias registrados</span><span class="v">${comDado.length} de ${N}</span></div>
+    <div class="kv"><span class="k">Média do período</span><span class="v">${media}</span></div>
+    <div class="kv"><span class="k">Média dos últimos 7 dias</span><span class="v">${m7}</span></div>
+    ${nAl?`<div class="kv"><span class="k">Dias com sinal neurológico</span><span class="v" style="color:var(--er)">${nAl}</span></div>`:''}
+  </div></div>`;
+}
+function grafico(ms){
+  const W=320,H=80,P=6;
+  const pts = ms.filter(m=>m.peso).map(m=>({x:new Date(m.data+'T12:00').getTime(), y:parseFloat(m.peso)}));
+  const pts2= ms.filter(m=>m.abdomen).map(m=>({x:new Date(m.data+'T12:00').getTime(), y:parseFloat(m.abdomen)}));
+  if(pts.length<2 && pts2.length<2) return '<div class="muted">Ao menos duas medidas para desenhar a linha.</div>';
+  const xs=[...pts,...pts2].map(p=>p.x), x0=Math.min(...xs), x1=Math.max(...xs)||x0+1;
+  const line=(arr,minY,maxY,cor)=>{
+    if(arr.length<2) return '';
+    const px=p=>P+(p.x-x0)/(x1-x0||1)*(W-2*P), py=p=>H-P-(p.y-minY)/((maxY-minY)||1)*(H-2*P);
+    return `<path d="${arr.map((p,i)=>`${i?'L':'M'}${px(p)},${py(p)}`).join(' ')}" fill="none" stroke="${cor}" stroke-width="2" stroke-linejoin="round"/>`
+      + arr.map(p=>`<circle cx="${px(p)}" cy="${py(p)}" r="2.5" fill="${cor}"/>`).join('');
+  };
+  const yA=pts.map(p=>p.y), yB=pts2.map(p=>p.y);
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    ${line(pts, Math.min(...yA)-0.5, Math.max(...yA)+0.5, '#38bdf8')}
+    ${line(pts2, Math.min(...yB)-1, Math.max(...yB)+1, '#fbbf24')}</svg>`;
+}
+function addMedida(){
+  const d=document.getElementById('m_data').value||dia;
+  const o={data:d, peso:val('m_peso'), cintura:val('m_cint'), abdomen:val('m_abd'), obs:document.getElementById('m_obs').value};
+  if(o.peso===''&&o.cintura===''&&o.abdomen===''){ msg('Preencha ao menos um valor'); return; }
+  S.medidas = S.medidas.filter(m=>m.data!==d); S.medidas.push(o);
+  S.medidas.sort((a,b)=>a.data<b.data?-1:1);
+  if(o.peso) S.cfg.peso=parseFloat(o.peso);
+  salvar(); render(); msg('Medida registrada');
+}
+function val(id){ const v=document.getElementById(id).value; return v===''?'':parseFloat(String(v).replace(',','.')); }
+function delMedida(d){ S.medidas=S.medidas.filter(m=>m.data!==d); salvar(); render(); }
+
+/* ---------- 12. SAÚDE ---------- */
+function renderSaude(){
+  let h = S.destaque
+    ? `<div class="alert a-crit"><span class="ic">🔬</span><div><b>${esc(S.destaque.t)}</b>${esc(S.destaque.m)}</div></div>`
+    : '';
+
+  if((S.prazos||[]).length){
+    h += `<div class="card"><div class="pad">
+      <div class="sec" style="margin-top:0">Prazos</div>
+      <div class="fgrid">${S.prazos.map((p,i)=>
+        `<div class="f1"><label>${esc(p.rot)}</label>
+          <input type="date" value="${p.d||''}" onchange="setPrazo(${i},this.value)"></div>`).join('')}</div>
+    </div></div>`;
+  }
+
+  h += `<div class="card"><div class="pad">
+    <div class="sec" style="margin-top:0">Rotina de arquivamento de exames</div>
+    <div class="muted">De todo exame de imagem, guarde SEMPRE o pacote de imagens (o ZIP/DICOM do portal do laboratório), não apenas o PDF do laudo. O laudo é a leitura de um radiologista num dia; a imagem permite a comparação direta entre datas. <b>Conclusão de evolução vem da imagem, nunca da diferença de redação entre laudos.</b></div>
+  </div></div>`;
+
+  const bloco=(id,tag,titulo,extra,corpo)=>{
+    const ab=abertos.has(id);
+    return `<div class="card"><div class="chead ${ab?'open':''}" onclick="toggleCard('${id}')"><span class="hora">${tag}</span>
+      <span class="nm">${titulo}</span><span class="kc">${extra}</span><span class="cv">▸</span></div>
+      <div class="cbody ${ab?'open':''}"><div style="padding-top:8px">${corpo}</div></div></div>`;
+  };
+  if(S.labs.length) h += bloco('s-lab','LAB','Marcadores laboratoriais', S.labs.length,
+    S.labs.map(l=>`<div class="kv"><span class="k">${esc(l.k)}<em style="display:block;font-size:10px;color:var(--tx3)">${l.d}</em></span>
+      <span class="v ${l.s||''}">${esc(l.v)}${l.o?'<em>'+esc(l.o)+'</em>':''}</span></div>`).join(''));
+  if(S.estrutural.length) h += bloco('s-img','IMG','Achados estruturais','imagem e laudos',
+    S.estrutural.map(l=>`<div class="kv" style="display:block"><div class="k" style="font-weight:600;color:var(--tx)">${esc(l.k)}</div>
+      <div style="font-size:12px;color:var(--tx2);margin-top:2px">${esc(l.v)}</div></div>`).join(''));
+  if(S.perguntas.length) h += bloco('s-perg','?','Perguntas para o médico', S.perguntas.length,
+    S.perguntas.map(q=>`<div class="kv" style="display:block"><div style="font-size:12.5px;color:var(--tx2)">• ${esc(q)}</div></div>`).join('')
+    + `<button class="btn sm" style="margin-top:10px" onclick="copiar(S.perguntas.map(q=>'• '+q).join('\\n'))">Copiar todas</button>`);
+
+  h += `<div class="card"><div class="pad">
+    <div class="sec" style="margin-top:0">Regras do plano que geram os alertas</div>
+    <div class="kv"><span class="k">Proteína mínima do dia</span><span class="v">${S.cfg.protMin} g <em>alvo ${S.cfg.protMeta} g</em></span></div>
+    <div class="kv"><span class="k">Teto de doses no fim de semana</span><span class="v">${S.cfg.dosesMax}</span></div>
+    <div class="kv"><span class="k">Meta de água</span><span class="v">${(S.cfg.aguaMeta/1000).toFixed(1).replace('.',',')} L</span></div>
+    <div class="kv"><span class="k">Meta calórica</span><span class="v">${S.cfg.kcalSem} seg-sex · ${S.cfg.kcalFds} sáb-dom</span></div>
+    <div class="rowb"><button class="btn sm" onclick="sheetCfg()">Ajustar</button></div>
+  </div></div>`;
+
+  h += `<div class="card"><div class="pad muted">
+    Material de apoio gerado por inteligência artificial, sem participação de médico ou nutricionista. Não substitui acompanhamento profissional. Perfil: ${esc(S.nome)}.${S.base?' Base: '+esc(S.base)+'.':''}
+  </div></div>`;
+  document.getElementById('t-saude').innerHTML = h;
+}
+function setPrazo(i,v){ if(S.prazos[i]){ S.prazos[i].d=v; salvar(); render(); } }
+
+/* ---------- 13. DADOS ---------- */
+function renderDados(){
+  const dias = Object.keys(S.dias).sort();
+  const ids = Object.keys(DB.perfis);
+  let h0 = `<div class="card"><div class="pad">
+    <div class="sec" style="margin-top:0">Perfil</div>
+    <div class="kv"><span class="k">Perfil ativo</span><span class="v">${esc(S.nome)}</span></div>
+    <div class="kv"><span class="k">Perfis neste aparelho</span><span class="v">${ids.length}</span></div>
+    <div class="kv"><span class="k">Modo deste aparelho</span><span class="v">${DB.disp.master?'MASTER — troca livre':(DB.disp.fixo?'fixo em '+esc((DB.perfis[DB.disp.fixo]||{}).nome||'—'):'livre')}</span></div>
+    <div class="rowb" style="margin-top:10px">
+      <button class="btn sm" onclick="sheetRenomear()">Renomear este perfil</button>
+      ${DB.disp.master
+        ? `<button class="btn sm" onclick="sheetNovoPerfil()">Criar perfil</button>
+           <button class="btn sm" onclick="tirarMaster()">Sair do modo master</button>`
+        : `<button class="btn sm" onclick="liberarMaster()">Liberar acesso master</button>`}
+    </div>
+    ${DB.disp.master && ids.length>1 ? `<div class="rowb" style="margin-top:8px">${
+      ids.filter(i=>i!==DB.atual).map(i=>`<button class="btn sm" onclick="trocarPerfil('${i}')">Ir para ${esc(DB.perfis[i].nome)}</button>`).join('')
+    }</div>` : ''}
+    ${DB.disp.master && ids.length>1 ? `<div class="rowb" style="margin-top:8px">${
+      ids.filter(i=>i!==DB.atual).map(i=>`<button class="btn d sm" onclick="apagarPerfil('${i}')">Apagar ${esc(DB.perfis[i].nome)}</button>`).join('')
+    }</div>` : ''}
+  </div></div>`;
+  const trs = Object.keys(S.treinos).filter(k=>S.treinos[k].tipo).length;
+  let h = h0 + `<div class="card"><div class="pad">
+    <div class="sec" style="margin-top:0">Conversar com o Claude</div>
+    <div class="muted" style="margin-bottom:10px">Manda os seus dados para o Claude pelo compartilhamento do celular e traz de volta o plano atualizado. Nada passa por servidor nenhum além do próprio Claude.</div>
+    <div class="rowb">
+      <button class="btn c wide" onclick="sheetClaude()">✦ Abrir o painel do Claude</button>
+    </div>
+  </div></div>`;
+
+  h += `<div class="card"><div class="pad">
+    <div class="sec" style="margin-top:0">Backup</div>
+    <div class="muted" style="margin-bottom:10px">Os dados ficam só neste aparelho. <b>Exportar este perfil</b> gera um arquivo só com ${esc(S.nome)} — é o que você manda ao Claude. <b>Exportar tudo</b> gera o backup do aparelho inteiro, com todos os perfis. A importação reconhece sozinha qual dos dois chegou.</div>
+    <div class="rowb">
+      <button class="btn p" onclick="exportar()">Exportar este perfil</button>
+      <button class="btn" onclick="exportarTudo()">Exportar tudo (${Object.keys(DB.perfis).length})</button>
+      <button class="btn" onclick="document.getElementById('imp').click()">Importar</button>
+      <button class="btn" onclick="copiarResumo()">Copiar resumo da semana</button>
+    </div>
+    <input type="file" id="imp" accept=".json" style="display:none" onchange="importar(this)">
+  </div></div>`;
+
+  h += `<div class="card"><div class="pad">
+    <div class="sec" style="margin-top:0">O que já está guardado</div>
+    <div class="kv"><span class="k">Dias com registro alimentar</span><span class="v">${dias.length}</span></div>
+    <div class="kv"><span class="k">Treinos registrados</span><span class="v">${trs}</span></div>
+    <div class="kv"><span class="k">Medidas</span><span class="v">${S.medidas.length}</span></div>
+    <div class="kv"><span class="k">Primeiro registro</span><span class="v">${dias.length?ddmmaaaa(dias[0]):'—'}</span></div>
+    <div class="kv"><span class="k">Atualizações recebidas do Claude</span><span class="v">${(S.atualizacoes||[]).length}${(S.atualizacoes||[]).length?'<em>última: '+ddmmaaaa(S.atualizacoes[S.atualizacoes.length-1].d)+'</em>':''}</span></div>
+  </div></div>`;
+
+  const hj=new Date(dia+'T12:00'); let linhas='';
+  for(let i=13;i>=0;i--){
+    const dt=new Date(hj); dt.setDate(dt.getDate()-i);
+    const k=dt.toLocaleDateString('sv');
+    if(!S.dias[k] && !S.treinos[k]) continue;
+    const t=totais(k), m=metaDia(k), tr=S.treinos[k];
+    const pct=Math.min(100,t.kcal/m.kcal*100);
+    linhas += `<div class="kv"><span class="k">${fmtData(k)} ${tr&&tr.tipo?'<b style="color:var(--ac)">'+(tr.tipo==='off'?'·':(tr.tipo==='run'?'🏃':tr.tipo))+'</b>':''}
+        <span style="display:block"><span class="bar" style="width:110px;display:inline-block;vertical-align:middle"><i class="${pct>110?'over':(pct>=90?'ok':'')}" style="width:${pct}%"></i></span></span></span>
+      <span class="v">${t.kcal} kcal<em>P ${t.p} g${t.doses?' · '+t.doses+' doses':''}</em></span></div>`;
+  }
+  h += `<div class="card"><div class="pad"><div class="sec" style="margin-top:0">Últimos 14 dias</div>
+    ${linhas||'<div class="muted">Sem registros ainda.</div>'}</div></div>`;
+
+  h += `<div class="card"><div class="pad">
+    <div class="sec" style="margin-top:0">Zona de risco</div>
+    <div class="rowb">
+      <button class="btn sm" onclick="restaurarPlano()">Restaurar plano e exames originais</button>
+      <button class="btn d sm" onclick="apagarTudo()">Apagar todos os dados</button></div>
+  </div></div>`;
+  document.getElementById('t-dados').innerHTML = h;
+}
+function baixar(blob, nome){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=nome; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+function exportar(){ baixar(blobBackup(), nomeBackup()); msg('Backup do perfil gerado'); }
+function exportarTudo(){
+  salvar();
+  const pac = {tipo:'aparelho', app:'rod-saude', v:4, gerado:hoje(), perfis:DB.perfis};
+  baixar(new Blob([JSON.stringify(pac,null,1)],{type:'application/json'}),
+         'rod-saude - todos os perfis - '+ddmmaaaa(hoje())+'.json');
+  msg(Object.keys(DB.perfis).length+' perfil(is) exportado(s)');
+}
+function blobBackup(){
+  const pac = {tipo:'perfil', app:'rod-saude', v:4, gerado:hoje(), perfil:S};
+  return new Blob([JSON.stringify(pac,null,1)], {type:'application/json'});
+}
+function nomeBackup(){ return (S.nome||'perfil')+' - registro diario - '+ddmmaaaa(hoje())+'.json'; }
+
+/* A importação reconhece três formatos:
+   1) pacote do aparelho  {tipo:'aparelho', perfis:{...}}
+   2) pacote de um perfil {tipo:'perfil', perfil:{...}}
+   3) backup da versão 1  {dias:{}, treinos:{}, ...} — entra no perfil escolhido */
+function importar(inp){
+  const f=inp.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{
+      const o=JSON.parse(r.result);
+      if(o && o.tipo==='aparelho' && o.perfis){
+        const n=Object.keys(o.perfis).length;
+        if(!confirm('Este arquivo tem '+n+' perfil(is) e SUBSTITUI todos os perfis deste aparelho. Continuar?')) return;
+        DB.perfis={}; for(const id in o.perfis) DB.perfis[id]=migrar(mesclar(vazio('—'), o.perfis[id]));
+        DB.atual=Object.keys(DB.perfis)[0]; S=DB.perfis[DB.atual];
+        DB.disp.fixo = DB.disp.master ? DB.disp.fixo : DB.atual;
+        localStorage.setItem(KEY, JSON.stringify(DB)); render(); msg(n+' perfil(is) importado(s)'); return;
+      }
+      const p = (o && o.tipo==='perfil' && o.perfil) ? o.perfil
+              : ((o && (o.dias || o.treinos)) ? o : null);
+      if(!p) throw 0;
+      const nome = p.nome || 'Perfil importado';
+      const alvo = Object.keys(DB.perfis).find(i=>DB.perfis[i].nome===nome);
+      let destino;
+      if(alvo){
+        if(!confirm('Já existe o perfil "'+nome+'". Substituir os dados dele por este arquivo?')) return;
+        destino = alvo;
+      }else if(DB.disp.master || !Object.keys(DB.perfis).length){
+        destino = novoId();
+      }else{
+        if(!confirm('Este arquivo é do perfil "'+nome+'", diferente de "'+S.nome+'". Substituir o perfil deste aparelho?')) return;
+        destino = DB.atual;
+      }
+      DB.perfis[destino] = migrar(mesclar(vazio(nome), p));
+      DB.perfis[destino].nome = nome;
+      DB.atual = destino; S = DB.perfis[destino];
+      if(!DB.disp.master) DB.disp.fixo = destino;
+      localStorage.setItem(KEY, JSON.stringify(DB));
+      render(); msg('Perfil "'+nome+'" importado');
+    }catch(e){ msg('Arquivo inválido'); } };
+  r.readAsText(f); inp.value='';
+}
+function sheetRenomear(){
+  const n = prompt('Nome deste perfil:', S.nome);
+  if(n===null) return;
+  const t=n.trim(); if(!t){ msg('Nome vazio'); return; }
+  S.nome=t; salvar(); render(); msg('Perfil renomeado');
+}
+function sheetNovoPerfil(){
+  const n = prompt('Nome da pessoa do novo perfil:');
+  if(n===null) return;
+  const t=n.trim(); if(!t){ msg('Nome vazio'); return; }
+  criarPerfil(t, false);
+  render(); irPara('dados');
+  msg('Perfil "'+t+'" criado, em branco. Monte o conteúdo com o Claude e importe.');
+}
+function apagarPerfil(id){
+  const p=DB.perfis[id]; if(!p) return;
+  if(!confirm('Apagar o perfil "'+p.nome+'" e TODOS os registros dele? Exporte antes.')) return;
+  if(!confirm('Confirma? Esta ação não tem volta.')) return;
+  delete DB.perfis[id];
+  if(DB.disp.fixo===id) DB.disp.fixo=DB.atual;
+  localStorage.setItem(KEY, JSON.stringify(DB)); render(); msg('Perfil apagado');
+}
+function restaurarPlano(){
+  if(!confirm('Restaurar neste perfil o cardápio, os exames e as perguntas da SEMENTE (perfil do Rodolfo)? Os registros diários não são tocados.')) return;
+  const b=base();
+  S.plano=b.plano; S.labs=b.labs; S.estrutural=b.estrutural; S.perguntas=b.perguntas;
+  S.prazos=b.prazos; S.cuidados=b.cuidados; S.rot=b.rot; S.notas=b.notas;
+  S.destaque=b.destaque; S.contexto=b.contexto; S.base=b.base;
+  salvar(); render(); msg('Semente restaurada neste perfil');
+}
+function apagarTudo(){
+  if(!confirm('Apagar TODOS os registros do perfil "'+S.nome+'"? Os outros perfis não são tocados. Exporte antes.')) return;
+  if(!confirm('Confirma? Esta ação não tem volta.')) return;
+  const nome=S.nome;
+  DB.perfis[DB.atual]=vazio(nome); S=DB.perfis[DB.atual];
+  localStorage.setItem(KEY, JSON.stringify(DB)); render(); msg('Perfil esvaziado');
+}
+
+/* ---------- 14. RESUMOS PARA O CLAUDE ---------- */
+function historicoDor(dias){
+  const N = dias||60, hj = new Date(dia+'T12:00'), L=[];
+  L.push('HISTÓRICO DE DOR — últimos '+N+' dias, até '+ddmmaaaa(dia));
+  if(S.contexto) L.push('Contexto: '+S.contexto);
+  L.push('');
+  let n=0, soma=0, alarmes=0;
+  for(let i=N-1;i>=0;i--){
+    const dt=new Date(hj); dt.setDate(dt.getDate()-i);
+    const k=dt.toLocaleDateString('sv'); const x=(S.dias[k]||{}).dor;
+    if(!x || (x.n==null && !(x.locais||[]).length && !(x.sint||[]).length)) continue;
+    const tr=S.treinos[k];
+    let l = ddmmaaaa(k)+' | '+(x.n!=null? x.n+'/10' : 'sem nota');
+    if((x.locais||[]).length) l += ' | '+x.locais.join(', ');
+    if((x.sint||[]).length) l += ' | '+x.sint.join(', ');
+    if(tr&&tr.tipo) l += ' | treino '+(tr.tipo==='off'?'descanso':tr.tipo);
+    if(x.obs) l += '\n   '+x.obs;
+    const al=alarmesDe(k); if(al.length){ l += '\n   *** SINAL NEUROLÓGICO ***'; alarmes++; }
+    L.push(l);
+    if(x.n!=null){ n++; soma+=x.n; }
+  }
+  if(!n) L.push('(nenhum dia com intensidade registrada)');
+  else {
+    L.push('');
+    L.push('Dias com nota: '+n+' | média '+(soma/n).toFixed(1));
+    if(alarmes) L.push('Dias com sinal neurológico: '+alarmes);
+  }
+  return L.join('\n');
+}
+function resumoDia(d){
+  const t=totais(d), m=metaDia(d), dd=D(d), tr=S.treinos[d];
+  const L=[`DIA ${ddmmaaaa(d)} (${fds(d)?'fim de semana':'dia de semana'})`,
+    `Consumido: ${t.kcal} kcal de ${m.kcal} | P ${t.p}g (alvo ${m.p}) | C ${t.c}g | G ${t.g}g | água ${(t.agua/1000).toFixed(1)}L${t.doses?' | '+t.doses+' doses de álcool':''}`];
+  refeicoes().forEach(r=>{
+    const marcados = r.itens.map((it,i)=>({it,q:dd.plano[r.id+'-'+i]})).filter(x=>x.q);
+    const ex = extrasDe(d, r.id);
+    if(!marcados.length && !ex.length) return;
+    L.push(`${r.hora} ${r.nome}: ` +
+      marcados.map(x=>x.it.n+(x.q!=1?' ('+x.q+'x)':'')).concat(ex.map(x=>'[fora do plano] '+x.e.n+(x.e.q>1?' x'+x.e.q:''))).join('; '));
+  });
+  const naoFeitas = S.plano.filter(r=>!refeicaoFeita(d,r)).map(r=>r.nome);
+  if(naoFeitas.length) L.push('Não registrado: '+naoFeitas.join(', '));
+  if(tr&&tr.tipo){
+    let l='Treino: '+(tr.tipo==='off'?'descanso':(tr.tipo==='run'?'corrida':tr.tipo));
+    (tr.ex||[]).forEach(e=>{ const s=e.series.filter(x=>x.carga||x.reps); if(s.length) l+=`\n  ${e.nome}: `+s.map(x=>`${x.reps||'?'}x${x.carga||'?'}kg${x.rpe?' RPE'+x.rpe:''}`).join(', '); });
+    if(tr.cardio&&tr.cardio.km) l+=`\n  corrida ${tr.cardio.km} km em ${tr.cardio.min||'?'} min`;
+    if(tr.obs) l+=`\n  nota: ${tr.obs}`;
+    L.push(l);
+  }
+  const dr = dd.dor||{};
+  if(dr.n!=null || (dr.locais||[]).length || (dr.sint||[]).length || dr.obs){
+    let l = 'DOR: '+(dr.n!=null? dr.n+'/10' : 'intensidade não informada');
+    if((dr.locais||[]).length) l += ' | local: '+dr.locais.join(', ');
+    if((dr.sint||[]).length) l += ' | '+dr.sint.join(', ');
+    const al = alarmesDe(d);
+    if(al.length) l += '\n  *** SINAL NEUROLÓGICO: '+al.join(', ')+' ***';
+    if(dr.obs) l += '\n  nota: '+dr.obs;
+    L.push(l);
+  }
+  if(dd.obs) L.push('Nota do dia: '+dd.obs);
+  return L.join('\n');
+}
+function resumoSemana(){
+  const hj=new Date(dia+'T12:00'); const L=['REGISTRO rod-saude — semana até '+ddmmaaaa(dia)];
+  for(let i=6;i>=0;i--){
+    const dt=new Date(hj); dt.setDate(dt.getDate()-i);
+    const k=dt.toLocaleDateString('sv'); const t=totais(k), m=metaDia(k), tr=S.treinos[k], dd=S.dias[k];
+    if(!dd&&!tr) continue;
+    let l = ddmmaaaa(k)+' | '+t.kcal+' kcal (meta '+m.kcal+') | P '+t.p+'g C '+t.c+'g G '+t.g+'g | água '+(t.agua/1000).toFixed(1)+'L';
+    if(t.doses) l += ' | '+t.doses+' doses';
+    if(tr&&tr.tipo) l += ' | treino '+(tr.tipo==='off'?'descanso':tr.tipo);
+    if(tr&&tr.cardio&&tr.cardio.km) l += ' | corrida '+tr.cardio.km+'km';
+    const fora = ((dd&&dd.extras)||[]).map(e=>e.n+(e.q>1?' x'+e.q:'')).join(', ');
+    if(fora) l += '\n   fora do plano: '+fora;
+    const dr=(dd||{}).dor||{};
+    if(dr.n!=null) l += ' | dor '+dr.n+'/10'+((dr.locais||[]).length?' ('+dr.locais.join(', ')+')':'');
+    const alr=alarmesDe(k);
+    if(alr.length) l += '\n   *** SINAL NEUROLÓGICO: '+alr.join(', ')+' ***';
+    if(dr.obs) l += '\n   dor: '+dr.obs;
+    if(dd&&dd.obs) l += '\n   nota: '+dd.obs;
+    L.push(l);
+  }
+  const ult=S.medidas[S.medidas.length-1];
+  if(ult) L.push('Última medida: '+ddmmaaaa(ult.data)+' — '+(ult.peso?ult.peso+'kg ':'')+(ult.cintura?'cintura '+ult.cintura+' ':'')+(ult.abdomen?'abdômen '+ult.abdomen:''));
+  return L.join('\n');
+}
+function copiarResumo(){ copiar(resumoSemana()); }
+function copiar(txt){
+  if(navigator.clipboard&&window.isSecureContext) navigator.clipboard.writeText(txt).then(()=>msg('Copiado'),()=>fb(txt));
+  else fb(txt);
+  function fb(t){ const a=document.createElement('textarea'); a.value=t; a.style.position='fixed'; a.style.opacity='0';
+    document.body.appendChild(a); a.select();
+    try{document.execCommand('copy'); msg('Copiado');}catch(e){msg('Não foi possível copiar');} a.remove(); }
+}
+
+/* ---------- 15. PAINEL DO CLAUDE ---------- */
+const FORMATO = `#RS refeicao | alimento | kcal | proteina g | carboidrato g | gordura g`;
+function sheetClaude(){
+  abrir(`<h3>✦ Falar com o Claude</h3>
+    <div class="sub">Escolha o que enviar. No celular abre o compartilhamento e você escolhe o Claude; no computador o conteúdo vai para a área de transferência.</div>
+    <div class="fgrid"><div class="f1"><label>Sua pergunta (opcional)</label>
+      <textarea id="cl_q" rows="2" placeholder="ex.: o que eu janto hoje para fechar a proteína?"></textarea></div></div>
+    <div class="rowb" style="margin-bottom:12px">
+      <button class="btn c wide" onclick="enviarClaude('dia')">Enviar o dia de hoje</button>
+      <button class="btn c wide" onclick="enviarClaude('semana')">Enviar a semana</button>
+      <button class="btn p wide" onclick="enviarClaude('backup')">Enviar o backup completo (.json)</button>
+    </div>
+    <div class="sec" style="margin-top:0">Caminho de volta</div>
+    <div class="sub">Cole aqui o que o Claude devolver. Serve tanto para lançar alimentos quanto para atualizar cardápio, metas, exames e exercícios.</div>
+    <textarea id="cl_in" rows="4" placeholder="#RS r3 | Cuscuz com ovo | 320 | 14 | 42 | 9"></textarea>
+    <div class="rowb"><button class="btn g wide" onclick="aplicarClaude()">Aplicar o que o Claude devolveu</button></div>
+    <div class="muted" style="margin-top:12px">Formato dos alimentos: <code>${esc(FORMATO)}</code><br>
+    Refeições: r1 pré-treino · r2 vitamina · r3 complemento · r4 lanche 10h · r5 almoço · r6 lanche 17h · r7 jantar · r8 extras.</div>`);
+}
+function promptBase(tipo, pergunta){
+  const cab = `Estes dados vêm do app rod-saude, perfil de ${S.nome}. Plano: ${S.cfg.kcalSem} kcal de segunda a sexta e ${S.cfg.kcalFds} no fim de semana, proteína alvo ${S.cfg.protMeta} g, teto de ${S.cfg.dosesMax} doses de álcool por dia de fim de semana.${S.contexto? ' '+S.contexto : ''}`;
+  const rodape = `\n\nSe você for lançar alimentos no meu app, responda com uma linha por alimento, dentro de um bloco de código, exatamente neste formato:\n${FORMATO}\nRefeições: r1 pré-treino, r2 vitamina, r3 complemento, r4 lanche 10h, r5 almoço, r6 lanche 17h, r7 jantar, r8 extras.\nSe for atualizar o plano, os exames ou os exercícios, responda com um bloco de código JSON com as chaves que mudaram (plano, labs, estrutural, perguntas, cfg, exames, bib).`;
+  const q = pergunta ? `\n\nMinha pergunta: ${pergunta}` : '';
+  if(tipo==='dor')     return cab+`\n\n`+historicoDor()+q+
+    `\n\nMe ajude a ler esta curva: a dor está subindo, estável ou caindo? Há relação com os treinos registrados? O que vale levar ao especialista em coluna?`;
+  if(tipo==='dia')     return cab+`\n\n`+resumoDia(dia)+q+rodape;
+  if(tipo==='semana')  return cab+`\n\n`+resumoSemana()+q+rodape;
+  return cab+`\n\nSegue o backup completo do app em anexo (.json): histórico de refeições, treinos com carga por exercício e medidas. Analise a aderência, a tendência de peso e de abdômen, e me diga o que ajustar.`+q+rodape;
+}
+async function enviarClaude(tipo){
+  const q = (document.getElementById('cl_q')||{}).value || '';
+  const texto = promptBase(tipo, q.trim());
+  if(tipo==='backup'){
+    const file = new File([blobBackup()], nomeBackup(), {type:'application/json'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      try{ await navigator.share({files:[file], text:texto, title:'rod-saude'}); fechar(); return; }catch(e){ if(e.name==='AbortError'){ return; } }
+    }
+    exportar(); copiar(texto); msg('Arquivo baixado e texto copiado');
+    abrirClaudeWeb(); return;
+  }
+  if(navigator.share){
+    try{ await navigator.share({text:texto, title:'rod-saude'}); fechar(); return; }catch(e){ if(e.name==='AbortError') return; }
+  }
+  copiar(texto); abrirClaudeWeb();
+}
+function abrirClaudeWeb(){ try{ window.open('https://claude.ai/new','_blank'); }catch(e){} }
+
+/* aplica a resposta do Claude: linhas #RS ou JSON de atualização */
+function aplicarClaude(){
+  const txt = (document.getElementById('cl_in')||{}).value || '';
+  if(!txt.trim()){ msg('Cole a resposta do Claude'); return; }
+  let n = aplicarLinhasRS(txt);
+  let j = aplicarJSON(txt);
+  if(!n && !j){ msg('Não reconheci nada no texto colado'); return; }
+  salvar(); fechar(); render();
+  msg((n?n+' alimento(s) lançado(s). ':'') + (j?'Plano atualizado.':''));
+}
+function aplicarLinhasRS(txt){
+  const dd = D(dia); let n=0;
+  txt.split(/\r?\n/).forEach(l=>{
+    l = l.replace(/^\s*[`>*-]*\s*/,'').trim();
+    if(!/^#RS\b/i.test(l)) return;
+    const p = l.replace(/^#RS\d*\s*\|?\s*/i,'').split('|').map(x=>x.trim());
+    if(p.length < 6) return;
+    let ref = (p[0].match(/r[1-8]/i)||['r8'])[0].toLowerCase();
+    const num = s => { const v=parseFloat(String(s).replace(',','.').replace(/[^0-9.\-]/g,'')); return isNaN(v)?0:v; };
+    dd.extras.push({ref, n:p[1], kcal:num(p[2]), p:num(p[3]), c:num(p[4]), g:num(p[5]), q:1, est:true});
+    abertos.add(ref); n++;
+  });
+  return n;
+}
+function aplicarJSON(txt){
+  const m = txt.match(/\{[\s\S]*\}/);
+  if(!m) return 0;
+  let o; try{ o = JSON.parse(m[0]); }catch(e){ return 0; }
+  let mudou = 0;
+  if(Array.isArray(o.plano) && o.plano.length){ S.plano=o.plano; mudou++; }
+  if(Array.isArray(o.labs) && o.labs.length){ S.labs=o.labs; mudou++; }
+  if(Array.isArray(o.estrutural) && o.estrutural.length){ S.estrutural=o.estrutural; mudou++; }
+  if(Array.isArray(o.perguntas) && o.perguntas.length){ S.perguntas=o.perguntas; mudou++; }
+  if(o.cfg && typeof o.cfg==='object'){ Object.assign(S.cfg, o.cfg); mudou++; }
+  if(Array.isArray(o.prazos) && o.prazos.length){ S.prazos=o.prazos; mudou++; }
+  if(Array.isArray(o.cuidados) && o.cuidados.length){ S.cuidados=o.cuidados; mudou++; }
+  if(o.rot && typeof o.rot==='object'){ Object.assign(S.rot, o.rot); mudou++; }
+  if(o.notas && typeof o.notas==='object'){ Object.assign(S.notas, o.notas); mudou++; }
+  if(o.destaque !== undefined){ S.destaque=o.destaque; mudou++; }
+  if(typeof o.contexto==='string'){ S.contexto=o.contexto; mudou++; }
+  if(typeof o.base==='string'){ S.base=o.base; mudou++; }
+  if(o.exames && typeof o.exames==='object'){
+    (S.prazos||[]).forEach(p=>{ if(o.exames[p.k]!==undefined) p.d=o.exames[p.k]; }); mudou++; }
+  if(o.bib && typeof o.bib==='object'){ Object.assign(S.bib, o.bib); mudou++; }
+  if(mudou){ S.atualizacoes = S.atualizacoes||[]; S.atualizacoes.push({d:hoje(), chaves:Object.keys(o)}); }
+  return mudou;
+}
+
+/* ---------- 16. FOTO DA REFEIÇÃO ---------- */
+function sheetFoto(rid){
+  fotoPendente = null;
+  const r = refeicoes().find(x=>x.id===rid);
+  abrir(`<h3>📷 Estimar pela foto — ${esc(r.nome)}</h3>
+    <div class="sub">Tire a foto, diga o que dá para dizer e envie ao Claude. Ele identifica os itens, estima a porção e devolve as linhas prontas para o app lançar.</div>
+    <div id="fprev"></div>
+    <div class="rowb" style="margin-bottom:11px">
+      <button class="btn wide" onclick="document.getElementById('f_in').click()">Escolher ou tirar a foto</button>
+    </div>
+    <input type="file" id="f_in" accept="image/*" capture="environment" style="display:none" onchange="pegarFoto(this)">
+    <div class="fgrid">
+      <div class="f1"><label>O que é (o que você conseguir dizer)</label>
+        <input id="f_desc" placeholder="ex.: cuscuz com ovo mexido e queijo coalho"></div>
+      <div><label>Peso ou porção aprox.</label><input id="f_peso" placeholder="ex.: 250 g ou 1 prato"></div>
+      <div><label>Referência de tamanho</label><input id="f_ref" placeholder="ex.: prato de sobremesa"></div>
+    </div>
+    <div class="rowb">
+      <button class="btn c wide" onclick="enviarFoto('${rid}')">Enviar ao Claude</button>
+    </div>
+    <div class="muted" style="margin-top:11px">Quanto mais pistas de escala você der (o prato, o garfo, o copo ao lado), melhor a estimativa. Sem referência, o erro de porção costuma ser bem maior que o erro de identificação.</div>
+    <div class="sec">Já tem a resposta?</div>
+    <textarea id="cl_in" rows="3" placeholder="#RS ${rid} | Cuscuz com ovo | 320 | 14 | 42 | 9"></textarea>
+    <div class="rowb"><button class="btn g wide" onclick="aplicarClaude()">Aplicar</button></div>`);
+}
+function pegarFoto(inp){
+  const f = inp.files[0]; if(!f) return;
+  fotoPendente = f;
+  const url = URL.createObjectURL(f);
+  document.getElementById('fprev').innerHTML = `<img class="foto" src="${url}" alt="">`;
+}
+async function enviarFoto(rid){
+  const r = refeicoes().find(x=>x.id===rid);
+  const desc = (document.getElementById('f_desc')||{}).value||'';
+  const peso = (document.getElementById('f_peso')||{}).value||'';
+  const ref  = (document.getElementById('f_ref')||{}).value||'';
+  const t = totais(dia), m = metaDia(dia);
+  const texto =
+`Estimativa de refeição — app rod-saude · ${ddmmaaaa(dia)}
+Refeição: ${r.hora} ${r.nome} (código ${rid})
+${desc?'Descrição: '+desc+'\n':''}${peso?'Peso ou porção aproximada: '+peso+'\n':''}${ref?'Referência de escala na foto: '+ref+'\n':''}
+Até agora hoje eu consumi ${t.kcal} kcal de ${m.kcal}, com ${t.p} g de proteína de ${m.p}.
+
+Identifique os alimentos ${fotoPendente?'da foto':'descritos'}, estime a porção de cada um em gramas e calcule kcal e macros. Diga em uma frase o grau de confiança da estimativa e o que mais pesou nela.
+Depois responda com UMA LINHA POR ALIMENTO, dentro de um bloco de código, exatamente neste formato:
+${FORMATO}
+Use ${rid} como refeição em todas as linhas.`;
+
+  if(fotoPendente && navigator.canShare && navigator.canShare({files:[fotoPendente]})){
+    try{ await navigator.share({files:[fotoPendente], text:texto, title:'rod-saude — estimar refeição'}); return; }
+    catch(e){ if(e.name==='AbortError') return; }
+  }
+  if(navigator.share){
+    try{ await navigator.share({text:texto}); return; }catch(e){ if(e.name==='AbortError') return; }
+  }
+  copiar(texto); abrirClaudeWeb();
+  if(fotoPendente) msg('Texto copiado. Anexe a foto no Claude.');
+}
+
+/* ---------- 17. MODAIS ---------- */
+function abrir(html){ document.getElementById('sheet').innerHTML=html; document.getElementById('mask').classList.add('on'); }
+function fechar(){ document.getElementById('mask').classList.remove('on'); fotoPendente=null; render(); }
+function sheetExtra(rid){
+  const r = refeicoes().find(x=>x.id===rid);
+  abrir(`<h3>Item fora do cardápio</h3>
+    <div class="sub">Vai lançado em <b>${esc(r.hora)} ${esc(r.nome)}</b>.</div>
+    <div class="chips">${EXTRAS.map((e,i)=>`<button class="chip ${e.dose?'al':''}" onclick="addExtraBib(${i},'${rid}')">${esc(e.n)}</button>`).join('')}</div>
+    <div class="sec" style="margin-top:4px">Ou lance à mão</div>
+    <div class="fgrid">
+      <div class="f1"><label>O que foi</label><input id="e_n" placeholder="ex.: cuscuz com ovo"></div>
+      <div><label>kcal</label><input type="number" inputmode="numeric" id="e_k"></div>
+      <div><label>Proteína (g)</label><input type="number" inputmode="decimal" id="e_p"></div>
+      <div><label>Carboidrato (g)</label><input type="number" inputmode="decimal" id="e_c"></div>
+      <div><label>Gordura (g)</label><input type="number" inputmode="decimal" id="e_g"></div>
+    </div>
+    <div class="rowb"><button class="btn p" onclick="addExtraMao('${rid}')">Adicionar</button>
+      <button class="btn c" onclick="sheetFoto('${rid}')">📷 estimar pela foto</button>
+      <button class="btn" onclick="fechar()">Cancelar</button></div>`);
+}
+function addExtraBib(i, rid){
+  const e=EXTRAS[i], dd=D(dia);
+  const ja = dd.extras.find(x=>x.n===e.n && (x.ref||'r8')===rid);
+  if(ja) ja.q=(ja.q||1)+1; else dd.extras.push(Object.assign({}, e, {q:1, ref:rid}));
+  abertos.add(rid); salvar(); render(); msg(e.n+' adicionado');
+}
+function addExtraMao(rid){
+  const n=document.getElementById('e_n').value.trim();
+  if(!n){ msg('Dê um nome ao item'); return; }
+  const g=id=>+document.getElementById(id).value||0;
+  D(dia).extras.push({n, kcal:g('e_k'), p:g('e_p'), c:g('e_c'), g:g('e_g'), q:1, ref:rid});
+  abertos.add(rid); salvar(); fechar(); render();
+}
+function sheetEx(){
+  const tr=T(dia); const sug=[...new Set([].concat(...Object.values(S.bib)))].filter(n=>!tr.ex.some(e=>e.nome===n));
+  abrir(`<h3>Adicionar exercício</h3>
+    ${sug.length?`<div class="chips">${sug.map(n=>`<button class="chip" onclick="addEx(${JSON.stringify(n).replace(/"/g,'&quot;')})">${esc(n)}</button>`).join('')}</div>`:''}
+    <div class="fgrid"><div class="f1"><label>Novo exercício</label><input id="x_n" placeholder="ex.: remada cavalinho"></div></div>
+    <div class="rowb"><button class="btn p" onclick="addEx(document.getElementById('x_n').value)">Adicionar</button>
+    <button class="btn" onclick="fechar()">Cancelar</button></div>`);
+}
+function addEx(nome){
+  nome=(nome||'').trim(); if(!nome){ msg('Informe o nome'); return; }
+  T(dia).ex.push({nome, series:[serieVazia(nome)]}); salvar(); fechar(); render();
+}
+function sheetCfg(){
+  const c=S.cfg;
+  abrir(`<h3>Ajustar metas</h3>
+    <div class="fgrid">
+      <div><label>kcal seg-sex</label><input type="number" id="c_ks" value="${c.kcalSem}"></div>
+      <div><label>kcal sáb-dom</label><input type="number" id="c_kf" value="${c.kcalFds}"></div>
+      <div><label>Proteína alvo (g)</label><input type="number" id="c_pm" value="${c.protMeta}"></div>
+      <div><label>Proteína mínima (g)</label><input type="number" id="c_pn" value="${c.protMin}"></div>
+      <div><label>Carboidrato (g)</label><input type="number" id="c_cb" value="${c.carbMeta}"></div>
+      <div><label>Gordura (g)</label><input type="number" id="c_gd" value="${c.gordMeta}"></div>
+      <div><label>Água (ml)</label><input type="number" id="c_ag" value="${c.aguaMeta}"></div>
+      <div><label>Teto de doses</label><input type="number" id="c_ds" value="${c.dosesMax}"></div>
+      <div class="f1"><label>Dia da pesagem</label><select id="c_dp">${['domingo','segunda','terça','quarta','quinta','sexta','sábado'].map((n,i)=>`<option value="${i}" ${i==c.diaPeso?'selected':''}>${n}</option>`).join('')}</select></div>
+    </div>
+    <div class="rowb"><button class="btn p" onclick="salvarCfg()">Salvar</button><button class="btn" onclick="fechar()">Cancelar</button></div>`);
+}
+function salvarCfg(){
+  const g=id=>+document.getElementById(id).value;
+  Object.assign(S.cfg,{kcalSem:g('c_ks'),kcalFds:g('c_kf'),protMeta:g('c_pm'),protMin:g('c_pn'),
+    carbMeta:g('c_cb'),gordMeta:g('c_gd'),aguaMeta:g('c_ag'),dosesMax:g('c_ds'),diaPeso:g('c_dp')});
+  salvar(); fechar(); render(); msg('Metas atualizadas');
+}
+let tmo; function msg(t){ const e=document.getElementById('toast'); e.textContent=t; e.classList.add('on');
+  clearTimeout(tmo); tmo=setTimeout(()=>e.classList.remove('on'),2200); }
+
+/* ---------- 17b. PERFIL: barra do topo e primeiro uso ---------- */
+function renderPerfilBar(){
+  const el = document.getElementById('pbar');
+  const ids = Object.keys(DB.perfis);
+  if(!DB.disp.master){
+    el.innerHTML = `<span class="pnome">${esc(S.nome)}</span><span>· aparelho fixo neste perfil</span>`;
+    return;
+  }
+  el.innerHTML = `<span class="tagm">MASTER</span>` + (ids.length>1
+    ? `<select onchange="trocarPerfil(this.value)">${ids.map(i=>
+        `<option value="${i}" ${i===DB.atual?'selected':''}>${esc(DB.perfis[i].nome)}</option>`).join('')}</select>`
+    : `<span class="pnome">${esc(S.nome)}</span>`)
+    + `<span class="qt">· ${ids.length} perfil(is)</span>`;
+}
+function precisaOnboarding(){ return !Object.keys(DB.perfis).length || !DB.atual; }
+function renderOnb(){
+  const el = document.getElementById('onb');
+  if(!precisaOnboarding()){ el.classList.remove('on'); return; }
+  el.classList.add('on');
+  el.innerHTML = `<h2>De quem é este aparelho?</h2>
+    <div class="sub">Cada pessoa é um perfil separado. O aparelho fica preso ao perfil escolhido aqui — é o que evita marcar a refeição de uma pessoa no registro de outra. Só o aparelho master troca de perfil livremente.</div>
+    <div class="pcard">
+      <b>Perfil novo, em branco</b>
+      <div class="muted" style="margin:6px 0 10px">Nasce sem cardápio, sem exames e sem treino. O conteúdo é montado com o Claude e entra por importação.</div>
+      <div class="fgrid"><div class="f1"><label>Nome da pessoa</label>
+        <input id="onb_nome" placeholder="ex.: Maria"></div></div>
+      <div class="rowb" style="margin-top:10px"><button class="btn p wide" onclick="onbCriar(false)">Criar perfil em branco</button></div>
+    </div>
+    <div class="pcard">
+      <b>Perfil do Rodolfo (semente completa)</b>
+      <div class="muted" style="margin:6px 0 10px">Traz o cardápio de 3.053 kcal, os exames, os achados de coluna e o programa ABCDE. Use só no aparelho dele.</div>
+      <div class="rowb"><button class="btn wide" onclick="onbCriar(true)">Criar com a semente do Rodolfo</button></div>
+    </div>
+    <div class="pcard">
+      <b>Já tenho o arquivo</b>
+      <div class="muted" style="margin:6px 0 10px">Importe um perfil exportado por outro aparelho, ou um backup da versão 1.</div>
+      <div class="rowb"><button class="btn wide" onclick="document.getElementById('onb_imp').click()">Importar arquivo</button></div>
+      <input type="file" id="onb_imp" accept=".json" style="display:none" onchange="importar(this)">
+    </div>`;
+}
+function onbCriar(semente){
+  const el = document.getElementById('onb_nome');
+  const nome = semente ? ((el&&el.value.trim())||'Rodolfo') : ((el&&el.value.trim())||'');
+  if(!semente && !nome){ msg('Escreva o nome da pessoa'); return; }
+  const id = criarPerfil(nome, semente);
+  DB.disp.fixo = id; DB.disp.master = semente;
+  localStorage.setItem(KEY, JSON.stringify(DB));
+  render();
+  msg(semente ? 'Perfil criado. Este aparelho ficou como MASTER.' : 'Perfil "'+nome+'" criado');
+}
+
+/* ---------- 18. NAVEGAÇÃO ---------- */
+const ABAS=[['hoje','🍽️','Hoje'],['treino','🏋️','Treino'],['medidas','📏','Medidas'],['saude','🩺','Saúde'],['dados','💾','Dados']];
+document.getElementById('nav').innerHTML = ABAS.map(([k,i,n])=>
+  `<button id="n-${k}" onclick="irPara('${k}')"><span class="i">${i}</span>${n}</button>`).join('')
+  + `<button id="n-claude" onclick="sheetClaude()"><span class="i">✦</span>Claude</button>`;
+function irPara(k){ aba=k; render(); window.scrollTo(0,0); }
+function mvDia(n){ const d=new Date(dia+'T12:00'); d.setDate(d.getDate()+n); dia=d.toLocaleDateString('sv'); render(); window.scrollTo(0,0); }
+
+function render(){
+  const y = window.scrollY;                 /* preserva a posição da rolagem */
+  renderOnb();
+  if(precisaOnboarding()) return;
+  renderPerfilBar();
+  renderTopo();
+  ABAS.forEach(([k])=>{
+    document.getElementById('t-'+k).classList.toggle('on', k===aba);
+    document.getElementById('n-'+k).classList.toggle('on', k===aba);
+  });
+  document.getElementById('ttl').textContent = {hoje:'Alimentação',treino:'Treino',medidas:'Medidas',saude:'Histórico médico',dados:'Dados'}[aba];
+  ({hoje:renderHoje, treino:renderTreino, medidas:renderMedidas, saude:renderSaude, dados:renderDados})[aba]();
+  window.scrollTo(0, y);
+}
+render();
+
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden && dia!==hoje() && aba==='hoje'){ dia=hoje(); render(); } });
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
