@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>Anamnese — nutrição</title>
+<style>
+:root{--bg:#0b1220;--bg2:#111c31;--card:#16233c;--card2:#1c2c49;--line:#25375a;
+--tx:#e8eefb;--tx2:#9fb0cd;--tx3:#6c7f9f;--ac:#38bdf8;--ok:#34d399;--wa:#fbbf24;--er:#f87171;--cl:#d97757;
+--safe:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;padding-bottom:calc(96px + var(--safe))}
+button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--tx);background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:9px 10px;width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--ac);outline-offset:-1px}
+input[type=number]{-moz-appearance:textfield}
+input.err,textarea.err,select.err{border-color:var(--er)}
+header{position:sticky;top:0;z-index:40;background:rgba(11,18,32,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:12px 14px 10px}
+header h1{margin:0;font-size:17px;font-weight:700;letter-spacing:.2px}
+header .sub{font-size:12px;color:var(--tx3);margin-top:3px;line-height:1.45}
+.prog{height:5px;background:#0a1526;border-radius:3px;margin-top:9px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--ac);width:0;transition:width .3s}
+.progtx{font-size:11px;color:var(--tx3);margin-top:5px;display:flex;justify-content:space-between}
+main{padding:12px 14px 20px;max-width:820px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:13px;margin-bottom:11px;overflow:hidden}
+.chead{display:flex;align-items:center;gap:9px;padding:12px 13px;cursor:pointer;user-select:none}
+.chead .nu{font-size:11px;font-weight:800;color:var(--ac);background:#0d2436;padding:3px 8px;border-radius:6px;min-width:26px;text-align:center}
+.chead .nm{flex:1;font-weight:650;font-size:14.5px;line-height:1.3}
+.chead .cv{font-size:12px;color:var(--tx3);transition:transform .2s}
+.chead.open .cv{transform:rotate(90deg)}
+.tagP{font-size:9.5px;font-weight:800;letter-spacing:.4px;padding:3px 7px;border-radius:99px;background:#0f2b20;color:var(--ok);border:1px solid #1f5741;white-space:nowrap}
+.tagV{font-size:9.5px;font-weight:800;letter-spacing:.4px;padding:3px 7px;border-radius:99px;background:#3a2a12;color:var(--wa);border:1px solid #5c4a19;white-space:nowrap}
+.cbody{display:none;padding:4px 13px 14px;border-top:1px solid var(--line)}
+.cbody.open{display:block}
+.card.prof{border-color:#5c4a19}
+.f{margin-top:13px}
+.f>label{display:block;font-size:12.5px;font-weight:600;color:var(--tx2);margin-bottom:5px;line-height:1.4}
+.f .req{color:var(--er)}
+.f .aj{font-size:11px;color:var(--tx3);margin-top:5px;line-height:1.45}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:520px){.grid2{grid-template-columns:1fr}}
+.ops{display:flex;flex-wrap:wrap;gap:7px}
+.op{background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:8px 13px;font-size:12.5px;color:var(--tx2);line-height:1.2}
+.op.on{background:var(--ac);border-color:var(--ac);color:#052539;font-weight:700}
+.op.on.wa{background:var(--wa);border-color:var(--wa);color:#2d2410}
+.esc{display:flex;gap:5px;flex-wrap:wrap}
+.esc button{width:34px;height:34px;border-radius:9px;background:var(--bg2);border:1px solid var(--line);font-size:13px;font-weight:700;color:var(--tx2)}
+.esc button.on{background:var(--ac);border-color:var(--ac);color:#052539}
+table.rep{width:100%;border-collapse:collapse;margin-top:4px}
+table.rep th{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);text-align:left;padding:0 4px 5px;font-weight:700}
+table.rep td{padding:3px 3px}
+table.rep input,table.rep select{padding:7px 7px;font-size:12.5px}
+.repwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.delrow{color:var(--er);font-size:16px;padding:2px 5px;opacity:.7}
+.btn{background:var(--card2);border:1px solid var(--line);padding:9px 13px;border-radius:10px;font-size:13px;font-weight:650}
+.btn.p{background:var(--ac);color:#052539;border-color:var(--ac)}
+.btn.c{background:var(--cl);color:#2a0f06;border-color:var(--cl)}
+.btn.sm{padding:6px 11px;font-size:12px}
+.btn:active{transform:scale(.98)}
+.rowb{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}
+.nota{background:#0d2436;border:1px solid #1a4460;color:#bfe4f8;border-radius:11px;padding:11px 13px;font-size:12.5px;line-height:1.5;margin-bottom:11px}
+.nota>b:first-child{display:block;margin-bottom:3px}
+.nota.wa{background:#2d2410;border-color:#5c4a19;color:#fde5b0}
+footer{position:fixed;bottom:0;left:0;right:0;z-index:50;background:rgba(17,28,49,.97);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:10px 14px calc(10px + var(--safe));display:flex;gap:8px;justify-content:center}
+footer .btn{flex:1;max-width:260px;text-align:center}
+.mask{position:fixed;inset:0;background:rgba(3,7,15,.8);z-index:60;display:none;align-items:flex-end;justify-content:center}
+.mask.on{display:flex}
+.sheet{background:var(--bg2);border:1px solid var(--line);border-radius:16px 16px 0 0;width:100%;max-width:640px;max-height:90vh;overflow:auto;padding:16px 15px calc(20px + var(--safe))}
+.sheet h3{margin:0 0 4px;font-size:16px}
+.sheet .sh{font-size:12px;color:var(--tx3);margin-bottom:12px;line-height:1.5}
+.sheet textarea{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;min-height:190px}
+.tabs{display:flex;gap:6px;margin-bottom:10px}
+.tabs button{flex:1;padding:8px 0;border-radius:9px;background:var(--card);border:1px solid var(--line);font-size:12.5px;font-weight:650;color:var(--tx2)}
+.tabs button.on{background:var(--ac);border-color:var(--ac);color:#052539}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + var(--safe));background:var(--ok);color:#06281c;padding:9px 16px;border-radius:99px;font-size:13px;font-weight:650;z-index:70;opacity:0;pointer-events:none;transition:opacity .2s;max-width:88vw;text-align:center}
+.toast.on{opacity:1}
+.sw{display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:9px 12px;margin-bottom:11px;font-size:12.5px;color:var(--tx2)}
+.sw b{color:var(--tx)}
+.sw .tg{margin-left:auto;width:46px;height:26px;border-radius:99px;background:var(--line);position:relative;flex:none}
+.sw .tg i{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--tx3);transition:.2s}
+.sw.on .tg{background:var(--ac)} .sw.on .tg i{left:23px;background:#052539}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Anamnese — nutrição</h1>
+  <div class="sub">O que você come de verdade, não o que gostaria de comer. A honestidade aqui vale mais que a precisão.</div>
+  <div class="prog"><i id="pi"></i></div>
+  <div class="progtx"><span id="pt">0 de 0 campos essenciais</span><span id="ps">salvo automaticamente</span></div>
+</header>
+
+<main>
+  <div class="nota">
+    <b>Como funciona</b>
+    Preencha o que souber; nada é obrigatório para salvar. O que você digita fica guardado neste aparelho e não é enviado a lugar nenhum sozinho. Ao final, o botão <b>Gerar</b> monta um resumo em texto e um pacote de dados para você enviar a quem vai montar o programa.
+  </div>
+  <div class="nota wa">
+    <b>Dados de saúde</b>
+    Este formulário reúne informação sensível. Só compartilhe com quem for de fato cuidar do seu acompanhamento, e guarde o arquivo gerado em local restrito. Nada aqui substitui consulta médica.
+  </div>
+
+  <div class="sw" id="swp" onclick="togProf()">
+    <div><b>Mostrar os blocos do profissional</b><br><span style="font-size:11px;color:var(--tx3)">Blocos marcados em amarelo, preenchidos por quem conduz o atendimento.</span></div>
+    <div class="tg"><i></i></div>
+  </div>
+
+  <div id="secoes"></div>
+</main>
+
+<footer>
+  <button class="btn" onclick="limpar()">Limpar</button>
+  <button class="btn c" onclick="salvarArquivo()">Baixar</button>
+  <button class="btn p" onclick="gerar()">Gerar</button>
+</footer>
+
+<div class="mask" id="mask" onclick="if(event.target===this)fechar()">
+  <div class="sheet" id="sheet"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SPEC = {"id": "nutricao", "versao": 1, "titulo": "Anamnese — nutrição", "sub": "O que você come de verdade, não o que gostaria de comer. A honestidade aqui vale mais que a precisão.", "secoes": [{"id": "ident", "nome": "Identificação", "quem": "P", "campos": [{"id": "nome", "l": "Nome completo", "t": "text", "req": true}, {"id": "data_form", "l": "Data de preenchimento", "t": "date", "req": true}, {"id": "acompanha", "l": "Já é acompanhado por nutricionista?", "t": "radio", "op": ["Sim", "Não", "Já fui"]}]}, {"id": "antro", "nome": "Medidas do corpo", "quem": "P", "intro": "Se tiver avaliação física recente, copie os números dela. Se não tiver, preencha o que der.", "campos": [{"id": "peso", "l": "Peso atual (kg)", "t": "number", "req": true}, {"id": "altura", "l": "Altura (m)", "t": "number", "req": true, "ph": "1,79"}, {"id": "cintura", "l": "Cintura (cm)", "t": "number", "aj": "Medida na altura do umbigo, sem prender a barriga."}, {"id": "abdomen", "l": "Abdômen (cm)", "t": "number"}, {"id": "quadril", "l": "Quadril (cm)", "t": "number"}, {"id": "gordura", "l": "Percentual de gordura (%)", "t": "number"}, {"id": "massa_magra", "l": "Massa magra (kg)", "t": "number"}, {"id": "metodo_aval", "l": "Como foi medido", "t": "radio", "op": ["Dobras cutâneas", "Bioimpedância", "DEXA", "Não sei", "Não fiz"]}, {"id": "data_aval", "l": "Data da avaliação", "t": "date"}, {"id": "dobras", "l": "Dobras cutâneas, se tiver", "t": "tabela", "cols": [{"id": "local", "l": "Dobra", "w": 140, "op": ["Peitoral", "Axilar média", "Tríceps", "Subescapular", "Abdominal", "Supra-ilíaca", "Coxa"]}, {"id": "mm", "l": "mm", "w": 80, "t": "number"}]}]}, {"id": "hist_peso", "nome": "Histórico de peso", "quem": "P", "campos": [{"id": "peso_max", "l": "Maior peso que já teve e quando", "t": "text", "ph": "ex.: 97 kg em 2023"}, {"id": "peso_min", "l": "Menor peso na vida adulta e quando", "t": "text"}, {"id": "peso_estavel", "l": "Há quanto tempo o peso está estável", "t": "text", "ph": "ex.: 1 ano parado em 91 kg", "aj": "Esta resposta é a mais valiosa do formulário: se o peso não muda há meses, o que você come hoje é, por definição, o que você gasta."}, {"id": "dietas", "l": "Dietas que já fez e o que aconteceu", "t": "textarea", "rows": 3}, {"id": "sanfona", "l": "Já perdeu e recuperou peso várias vezes?", "t": "radio", "op": ["Sim", "Não"]}]}, {"id": "objetivo", "nome": "Objetivo", "quem": "P", "campos": [{"id": "obj", "l": "Qual o objetivo", "t": "radio", "req": true, "op": ["Perder gordura", "Ganhar massa muscular", "Perder gordura e manter massa", "Manter o peso", "Melhorar exames", "Desempenho no esporte"]}, {"id": "obj_meta", "l": "Meta numérica, se tiver", "t": "text", "ph": "ex.: chegar a 85 kg e 15% de gordura"}, {"id": "obj_prazo", "l": "Em quanto tempo espera chegar lá", "t": "text"}, {"id": "obj_motivo", "l": "Por que isso importa para você agora", "t": "textarea", "rows": 2}]}, {"id": "rotina", "nome": "Rotina do dia", "quem": "P", "campos": [{"id": "acorda", "l": "Que horas acorda", "t": "text", "ph": "ex.: 4h30", "req": true}, {"id": "dorme", "l": "Que horas dorme", "t": "text"}, {"id": "trabalho", "l": "Horário de trabalho", "t": "text", "ph": "ex.: 8h-12h e 13h30-17h30"}, {"id": "treino_hora", "l": "Que horas treina", "t": "text", "ph": "ex.: 5h às 6h30"}, {"id": "refeicoes_num", "l": "Quantas refeições faz por dia", "t": "radio", "op": ["2", "3", "4", "5", "6", "7 ou mais"]}, {"id": "onde_come", "l": "Onde faz as refeições principais", "t": "check", "op": ["Em casa", "No trabalho", "Restaurante", "Delivery", "Marmita levada"]}]}, {"id": "recordatorio", "nome": "O que você comeu ontem", "quem": "P", "intro": "Descreva um dia comum, do jeito que aconteceu. Quantidades aproximadas bastam: colheres, unidades, tamanho do prato. Se ontem foi atípico, use o último dia comum.", "campos": [{"id": "rec", "l": "Refeição por refeição", "t": "tabela", "cols": [{"id": "hora", "l": "Hora", "w": 80, "ph": "07:15"}, {"id": "refeicao", "l": "Refeição", "w": 120, "op": ["Ao acordar", "Pré-treino", "Pós-treino", "Café da manhã", "Lanche da manhã", "Almoço", "Lanche da tarde", "Jantar", "Ceia", "Fora de hora"]}, {"id": "o_que", "l": "O que comeu e bebeu", "w": 300}, {"id": "quanto", "l": "Quanto", "w": 150, "ph": "ex.: 4 col. de arroz"}]}, {"id": "rec_obs", "l": "Algo mais que costuma comer e não entrou acima", "t": "textarea", "rows": 3}, {"id": "belisca", "l": "Belisca entre as refeições? O quê?", "t": "textarea", "rows": 2}, {"id": "noite", "l": "Como é a sua noite depois do jantar", "t": "textarea", "rows": 2, "ph": "ex.: não janto, só tomo um iogurte antes de dormir"}]}, {"id": "fds", "nome": "Fim de semana e dias livres", "quem": "P", "intro": "Costuma ser aqui que a conta da semana se decide. Não é julgamento: é aritmética.", "campos": [{"id": "fds_muda", "l": "O que muda na alimentação no fim de semana", "t": "textarea", "rows": 3}, {"id": "alcool_tipo", "l": "O que costuma beber", "t": "check", "op": ["Não bebo", "Cerveja", "Vinho", "Whisky", "Cachaça", "Gin", "Vodca", "Caipirinha", "Drinks doces"]}, {"id": "alcool_qtd", "l": "Quantas doses num dia típico de fim de semana", "t": "text", "ph": "ex.: 8 a 10 latas de cerveja", "aj": "Uma dose é uma lata de cerveja, uma taça de vinho ou uma dose de destilado."}, {"id": "alcool_dias", "l": "Quantos dias por semana isso acontece", "t": "radio", "op": ["Nenhum", "1", "2", "3", "4 ou mais"]}, {"id": "petisco", "l": "O que come junto com a bebida", "t": "textarea", "rows": 2}, {"id": "fds_extra", "l": "Pizza, churrasco, sobremesa: com que frequência", "t": "textarea", "rows": 2}]}, {"id": "prefs", "nome": "Preferências e restrições", "quem": "P", "campos": [{"id": "restricao", "l": "Segue alguma restrição alimentar", "t": "check", "op": ["Nenhuma", "Vegetariano", "Vegano", "Sem lactose", "Sem glúten", "Sem carne vermelha", "Restrição religiosa", "Baixo sódio", "Baixo carboidrato"]}, {"id": "nao_come", "l": "O que você não come de jeito nenhum", "t": "textarea", "rows": 2}, {"id": "gosta", "l": "O que você mais gosta de comer", "t": "textarea", "rows": 2, "aj": "Plano que tira tudo o que a pessoa gosta não dura três semanas. Isto aqui é para o plano ser possível."}, {"id": "cozinha", "l": "Quem cozinha na sua casa", "t": "radio", "op": ["Eu", "Outra pessoa", "Dividido", "Não cozinho, compro pronto"]}, {"id": "habilidade", "l": "Quanto tempo você tem para cozinhar por dia", "t": "radio", "op": ["Quase nenhum", "Até 30 min", "30 a 60 min", "Mais de 1 hora"]}, {"id": "orcamento", "l": "Existe limite de orçamento a respeitar?", "t": "textarea", "rows": 2}]}, {"id": "suple", "nome": "Suplementos", "quem": "P", "intro": "Copie do rótulo, não de memória. O erro mais comum de todo acompanhamento nutricional nasce aqui.", "campos": [{"id": "suples", "l": "Suplementos em uso", "t": "tabela", "cols": [{"id": "nome", "l": "Suplemento", "w": 150, "ph": "ex.: whey isolado"}, {"id": "marca", "l": "Marca", "w": 110}, {"id": "dose", "l": "Quanto por vez", "w": 120, "ph": "ex.: 1 scoop"}, {"id": "freq", "l": "Quantas vezes ao dia", "w": 110}, {"id": "quando", "l": "Em que horário", "w": 110}]}, {"id": "scoop_peso", "l": "Se usa proteína em pó: quanto pesa o SEU scoop, na balança (g)", "t": "number", "aj": "Encha o scoop como você enche todo dia e pese. Scoops variam de 20 a 40 g entre marcas, e essa diferença sozinha muda a conta de proteína do dia inteiro."}, {"id": "rotulo_po", "l": "No rótulo: gramas de pó por porção", "t": "number", "ph": "ex.: 40"}, {"id": "rotulo_prot", "l": "No rótulo: gramas de proteína por porção", "t": "number", "ph": "ex.: 26"}, {"id": "rotulo_kcal", "l": "No rótulo: calorias por porção", "t": "number", "ph": "ex.: 147"}, {"id": "suple_quem", "l": "Quem indicou esses suplementos", "t": "text"}]}, {"id": "digest", "nome": "Digestão, apetite e comportamento", "quem": "P", "campos": [{"id": "sintomas", "l": "Sente algum destes sintomas com frequência", "t": "check", "op": ["Azia ou queimação", "Estufamento", "Gases", "Prisão de ventre", "Diarreia", "Náusea", "Dor abdominal", "Nenhum"]}, {"id": "intestino", "l": "Frequência do intestino", "t": "radio", "op": ["Todo dia", "Dia sim, dia não", "2 a 3 vezes por semana", "Menos que isso"]}, {"id": "fome", "l": "Como é a sua fome ao longo do dia", "t": "textarea", "rows": 2}, {"id": "compulsao", "l": "Tem episódios de comer muito além do que queria?", "t": "radio", "op": ["Nunca", "Raramente", "Às vezes", "Com frequência"]}, {"id": "gatilho", "l": "O que costuma disparar esses episódios", "t": "textarea", "rows": 2}, {"id": "agua", "l": "Quanta água bebe por dia", "t": "text", "ph": "ex.: 2,5 litros"}, {"id": "cafe_qtd", "l": "Quantas xícaras de café por dia", "t": "text"}, {"id": "refri", "l": "Refrigerante ou suco industrializado: quanto por semana", "t": "text"}]}, {"id": "prof_nut", "nome": "Cálculo do profissional", "quem": "V", "campos": [{"id": "n_tmb", "l": "TMB estimada e método", "t": "text", "ph": "ex.: 1.955 kcal (Katch-McArdle)"}, {"id": "n_get", "l": "Gasto energético total adotado", "t": "text", "ph": "ex.: 3.700 kcal"}, {"id": "n_metodos", "l": "Métodos usados e por que este foi adotado", "t": "textarea", "rows": 3, "aj": "Se o peso está estável há meses, a reconstrução pela ingestão atual costuma ser a estimativa mais confiável."}, {"id": "n_deficit", "l": "Déficit ou superávit adotado", "t": "text", "ph": "ex.: -515 kcal/dia (14%)"}, {"id": "n_macros", "l": "Macros alvo", "t": "tabela", "cols": [{"id": "macro", "l": "Macro", "w": 120, "op": ["Proteína", "Carboidrato", "Gordura"]}, {"id": "g", "l": "Gramas", "w": 90, "t": "number"}, {"id": "gkg", "l": "g/kg", "w": 80, "t": "number"}, {"id": "pct", "l": "% kcal", "w": 80, "t": "number"}]}, {"id": "n_premissas", "l": "Premissas declaradas e margem de erro", "t": "textarea", "rows": 3}, {"id": "n_alertas", "l": "Alertas a programar no app", "t": "textarea", "rows": 3, "ph": "ex.: proteína mínima 180 g; teto de 5 doses; aviso de gordura saturada"}, {"id": "n_obs", "l": "Observações", "t": "textarea", "rows": 3}]}]};
+const KEY = 'rodform_' + SPEC.id;
+let R = carregar();
+let verProf = false;
+let abertas = new Set([SPEC.secoes[0].id]);
+
+function carregar(){ try{ return JSON.parse(localStorage.getItem(KEY)) || {}; }catch(e){ return {}; } }
+function salvar(){ try{
+  localStorage.setItem(KEY, JSON.stringify(R));
+  const req = todos().filter(x=>x.c.req);
+  localStorage.setItem(KEY+'_meta', JSON.stringify({
+    titulo:SPEC.titulo, id:SPEC.id, req:req.length,
+    ok:req.filter(x=>preenchido(x.c)).length,
+    campos:Object.keys(R).length,
+    nome:R.nome||'', atualizado:new Date().toLocaleDateString('sv')}));
+  localStorage.setItem(KEY+'_resumo', resumo());
+}catch(e){} }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+let tmo; function msg(t){ const e=document.getElementById('toast'); e.textContent=t; e.classList.add('on');
+  clearTimeout(tmo); tmo=setTimeout(()=>e.classList.remove('on'),1900); }
+
+/* ---------- render ---------- */
+function render(){
+  const alvo = document.getElementById('secoes');
+  alvo.innerHTML = SPEC.secoes.map((s,i)=>{
+    if(s.quem==='V' && !verProf) return '';
+    const ab = abertas.has(s.id);
+    const tag = s.quem==='V' ? '<span class="tagV">PROFISSIONAL</span>'
+              : (s.quem==='PV' ? '<span class="tagP">PESSOA</span><span class="tagV">+ PROF.</span>' : '<span class="tagP">PESSOA</span>');
+    return `<div class="card ${s.quem==='V'?'prof':''}">
+      <div class="chead ${ab?'open':''}" onclick="tog('${s.id}')">
+        <span class="nu">${i+1}</span><span class="nm">${esc(s.nome)}</span>${tag}<span class="cv">▸</span>
+      </div>
+      <div class="cbody ${ab?'open':''}">
+        ${s.intro?`<div class="aj" style="font-size:11.5px;color:var(--tx3);margin-top:10px;line-height:1.5">${esc(s.intro)}</div>`:''}
+        ${s.campos.map(c=>campo(c)).join('')}
+      </div></div>`;
+  }).join('');
+  progresso();
+}
+function tog(id){ if(abertas.has(id)) abertas.delete(id); else abertas.add(id); render(); }
+function togProf(){ verProf=!verProf; document.getElementById('swp').classList.toggle('on',verProf); render(); }
+
+function campo(c){
+  const v = R[c.id];
+  const lab = `<label>${esc(c.l)}${c.req?' <span class="req">*</span>':''}</label>`;
+  const aj = c.aj?`<div class="aj">${esc(c.aj)}</div>`:'';
+  let ctrl='';
+  if(c.t==='text' || c.t==='date' || c.t==='number' || c.t==='tel' || c.t==='email'){
+    const im = c.t==='number' ? ' inputmode="decimal"' : '';
+    ctrl = `<input type="${c.t}"${im} id="c_${c.id}" value="${esc(v==null?'':v)}" placeholder="${esc(c.ph||'')}" oninput="setv('${c.id}',this.value)">`;
+  } else if(c.t==='textarea'){
+    ctrl = `<textarea id="c_${c.id}" rows="${c.rows||3}" placeholder="${esc(c.ph||'')}" oninput="setv('${c.id}',this.value)">${esc(v==null?'':v)}</textarea>`;
+  } else if(c.t==='radio'){
+    ctrl = `<div class="ops">${c.op.map(o=>`<button type="button" class="op ${v===o?'on':''}" onclick="setv('${c.id}',${v===o?'null':JSON.stringify(o).replace(/"/g,'&quot;')})">${esc(o)}</button>`).join('')}</div>`;
+  } else if(c.t==='check'){
+    const arr = Array.isArray(v)?v:[];
+    ctrl = `<div class="ops">${c.op.map(o=>`<button type="button" class="op ${arr.includes(o)?'on wa':''}" onclick="togm('${c.id}',${JSON.stringify(o).replace(/"/g,'&quot;')})">${esc(o)}</button>`).join('')}</div>`;
+  } else if(c.t==='escala'){
+    const max = c.max||10;
+    let b=''; for(let i=0;i<=max;i++) b+=`<button type="button" class="${v===i?'on':''}" onclick="setv('${c.id}',${v===i?'null':i})">${i}</button>`;
+    ctrl = `<div class="esc">${b}</div>`;
+  } else if(c.t==='tabela'){
+    const linhas = Array.isArray(v)&&v.length?v:[{}];
+    ctrl = `<div class="repwrap"><table class="rep"><thead><tr>${c.cols.map(k=>`<th style="min-width:${k.w||110}px">${esc(k.l)}</th>`).join('')}<th></th></tr></thead>
+      <tbody>${linhas.map((ln,i)=>`<tr>${c.cols.map(k=>{
+        if(k.op) return `<td><select onchange="setcel('${c.id}',${i},'${k.id}',this.value)">
+            <option value="">—</option>${k.op.map(o=>`<option ${ln[k.id]===o?'selected':''}>${esc(o)}</option>`).join('')}</select></td>`;
+        return `<td><input type="${k.t||'text'}"${k.t==='number'?' inputmode="decimal"':''} value="${esc(ln[k.id]||'')}" placeholder="${esc(k.ph||'')}" oninput="setcel('${c.id}',${i},'${k.id}',this.value)"></td>`;
+      }).join('')}<td><button type="button" class="delrow" onclick="delrow('${c.id}',${i})">✕</button></td></tr>`).join('')}</tbody></table></div>
+      <div class="rowb"><button type="button" class="btn sm" onclick="addrow('${c.id}')">+ linha</button></div>`;
+  } else if(c.t==='grupo2'){
+    return `<div class="f grid2">${c.campos.map(x=>campo(x)).join('')}</div>`;
+  }
+  return `<div class="f">${lab}${ctrl}${aj}</div>`;
+}
+
+/* ---------- estado ---------- */
+function setv(id,val){ if(val===null||val===''||val===undefined) delete R[id]; else R[id]=val; salvar(); progresso();
+  const c = achar(id); if(c && (c.t==='radio'||c.t==='escala')) render(); }
+function togm(id,op){ const a = Array.isArray(R[id])?R[id].slice():[];
+  const i=a.indexOf(op); if(i>=0) a.splice(i,1); else a.push(op);
+  if(a.length) R[id]=a; else delete R[id]; salvar(); render(); }
+function setcel(id,i,col,val){ const a = Array.isArray(R[id])?R[id]:[{}]; while(a.length<=i) a.push({});
+  if(val==='') delete a[i][col]; else a[i][col]=val; R[id]=a; salvar(); progresso(); }
+function addrow(id){ const a = Array.isArray(R[id])?R[id].slice():[{}]; a.push({}); R[id]=a; salvar(); render(); }
+function delrow(id,i){ const a = Array.isArray(R[id])?R[id].slice():[]; a.splice(i,1); if(a.length) R[id]=a; else delete R[id]; salvar(); render(); }
+function achar(id){ for(const s of SPEC.secoes){ const f=buscar(s.campos,id); if(f) return f; } return null; }
+function buscar(cs,id){ for(const c of cs){ if(c.id===id) return c; if(c.campos){ const f=buscar(c.campos,id); if(f) return f; } } return null; }
+function todos(){ const out=[]; SPEC.secoes.forEach(s=>colher(s.campos,s,out)); return out; }
+function colher(cs,s,out){ cs.forEach(c=>{ if(c.campos) colher(c.campos,s,out); else out.push({c,s}); }); }
+function preenchido(c){ const v=R[c.id];
+  if(v==null||v==='') return false;
+  if(Array.isArray(v)) return v.some(x=>typeof x==='object' ? Object.keys(x).length>0 : true);
+  return true; }
+
+function progresso(){
+  const req = todos().filter(x=>x.c.req);
+  const ok = req.filter(x=>preenchido(x.c)).length;
+  const pct = req.length? ok/req.length*100 : 0;
+  document.getElementById('pi').style.width = pct+'%';
+  document.getElementById('pt').textContent = ok+' de '+req.length+' campos essenciais';
+}
+
+/* ---------- saída ---------- */
+function valorTexto(c){
+  const v=R[c.id];
+  if(v==null||v==='') return null;
+  if(c.t==='tabela'){
+    const ls=(Array.isArray(v)?v:[]).filter(x=>Object.keys(x).length);
+    if(!ls.length) return null;
+    return ls.map(ln=>c.cols.map(k=>ln[k.id]?k.l+': '+ln[k.id]:null).filter(Boolean).join(' · ')).map(s=>'   - '+s).join('\n');
+  }
+  if(Array.isArray(v)) return v.join(', ');
+  return String(v);
+}
+function resumo(){
+  const L=[];
+  L.push('=== '+SPEC.titulo.toUpperCase()+' ===');
+  L.push('Formulário rod-saude · modelo '+SPEC.id+' v'+SPEC.versao);
+  L.push('');
+  SPEC.secoes.forEach((s,i)=>{
+    const linhas=[];
+    const flat=[]; colher(s.campos,s,flat);
+    flat.forEach(({c})=>{ const t=valorTexto(c); if(t!=null) linhas.push(t.includes('\n')? c.l+':\n'+t : c.l+': '+t); });
+    if(linhas.length){ L.push((i+1)+'. '+s.nome.toUpperCase()); linhas.forEach(x=>L.push('  '+x)); L.push(''); }
+  });
+  const faltam = todos().filter(x=>x.c.req && !preenchido(x.c)).map(x=>x.c.l);
+  if(faltam.length){ L.push('CAMPOS ESSENCIAIS AINDA EM BRANCO:'); faltam.forEach(f=>L.push('  - '+f)); L.push(''); }
+  L.push('Ao receber: monte o perfil para o app rod-saude a partir destes dados. Sinalize o que ficou faltando e o que precisa de confirmação médica antes de virar prescrição.');
+  return L.join('\n');
+}
+function pacote(){
+  return JSON.stringify({formulario:SPEC.id, versao:SPEC.versao, titulo:SPEC.titulo, respostas:R}, null, 1);
+}
+function gerar(){
+  const faltam = todos().filter(x=>x.c.req && !preenchido(x.c));
+  abrir(`<h3>Formulário pronto</h3>
+    <div class="sh">${faltam.length? '<b style="color:var(--wa)">'+faltam.length+' campo(s) essencial(is) em branco.</b> Dá para enviar assim mesmo; o que faltar será perguntado depois.' : 'Todos os campos essenciais preenchidos.'}</div>
+    <div class="tabs"><button id="t1" class="on" onclick="aba(1)">Resumo em texto</button><button id="t2" onclick="aba(2)">Pacote de dados</button></div>
+    <textarea id="out" readonly>${esc(resumo())}</textarea>
+    <div class="rowb">
+      <button class="btn p" onclick="copiar(document.getElementById('out').value)">Copiar</button>
+      <button class="btn c" onclick="enviar()">Enviar</button>
+      <button class="btn" onclick="salvarArquivo()">Baixar .json</button>
+      <button class="btn" onclick="fechar()">Fechar</button>
+    </div>
+    <div class="sh" style="margin-top:12px">O <b>resumo em texto</b> serve para colar numa conversa ou num e-mail. O <b>pacote de dados</b> é o formato que o app lê para montar o perfil automaticamente. Na dúvida, envie os dois.</div>`);
+}
+function aba(n){
+  document.getElementById('t1').classList.toggle('on',n===1);
+  document.getElementById('t2').classList.toggle('on',n===2);
+  document.getElementById('out').value = n===1 ? resumo() : pacote();
+}
+async function enviar(){
+  const txt = document.getElementById('out').value;
+  if(navigator.share){ try{ await navigator.share({text:txt, title:SPEC.titulo}); return; }catch(e){ if(e.name==='AbortError') return; } }
+  copiar(txt);
+}
+function salvarArquivo(){
+  const nome = (R.nome||'sem nome').toString().trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9\-]/g,'');
+  const d=new Date(); const dd=String(d.getDate()).padStart(2,'0')+String(d.getMonth()+1).padStart(2,'0')+d.getFullYear();
+  const b = new Blob([pacote()],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b);
+  a.download = nome+' - '+SPEC.id+' - '+dd+'.json'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000); msg('Arquivo gerado');
+}
+function copiar(t){
+  if(navigator.clipboard&&window.isSecureContext) navigator.clipboard.writeText(t).then(()=>msg('Copiado'),()=>fb(t)); else fb(t);
+  function fb(x){ const a=document.createElement('textarea'); a.value=x; a.style.position='fixed'; a.style.opacity='0';
+    document.body.appendChild(a); a.select(); try{document.execCommand('copy'); msg('Copiado');}catch(e){msg('Não foi possível copiar');} a.remove(); }
+}
+function limpar(){
+  if(!confirm('Apagar tudo o que foi preenchido neste formulário?')) return;
+  R={}; localStorage.removeItem(KEY+'_meta'); localStorage.removeItem(KEY+'_resumo'); salvar(); render(); msg('Formulário limpo');
+}
+function abrir(h){ document.getElementById('sheet').innerHTML=h; document.getElementById('mask').classList.add('on'); }
+function fechar(){ document.getElementById('mask').classList.remove('on'); }
+
+render();
+</script>
+</body>
+</html>

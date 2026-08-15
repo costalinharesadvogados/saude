@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>rod-saude — anamnese em três partes</title>
+<style>
+:root{--bg:#0b1220;--bg2:#111c31;--card:#16233c;--card2:#1c2c49;--line:#25375a;
+--tx:#e8eefb;--tx2:#9fb0cd;--tx3:#6c7f9f;--ac:#38bdf8;--ok:#34d399;--wa:#fbbf24;--er:#f87171;--pr:#a78bfa;--cl:#d97757;
+--safe:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;padding-bottom:calc(40px + var(--safe))}
+button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
+a{color:var(--ac);text-decoration:none}
+main{max-width:820px;margin:0 auto;padding:0 14px 30px}
+
+.hero{padding:34px 14px 26px;text-align:center;border-bottom:1px solid var(--line);
+  background:radial-gradient(120% 90% at 50% 0%, #14243d 0%, #0b1220 70%)}
+.hero .mk{display:inline-block;font-size:11px;font-weight:800;letter-spacing:1.4px;color:var(--ac);
+  border:1px solid #1a4460;background:#0d2436;border-radius:99px;padding:4px 12px;margin-bottom:14px}
+.hero h1{margin:0;font-size:27px;line-height:1.2;font-weight:750;letter-spacing:-.3px}
+.hero p{margin:12px auto 0;max-width:560px;font-size:14.5px;color:var(--tx2);line-height:1.65}
+
+h2{font-size:18px;margin:30px 0 4px;font-weight:700;letter-spacing:-.2px}
+h2+.lead{color:var(--tx3);font-size:13px;margin:0 0 14px;line-height:1.6}
+
+.form{display:block;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px 15px 13px;margin-bottom:11px;transition:.15s}
+.form:active{transform:scale(.995)}
+.form .top{display:flex;align-items:flex-start;gap:12px}
+.form .n{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:15px;font-weight:800;flex:none}
+.form.f1 .n{background:#33161a;color:#fbc9c9}
+.form.f2 .n{background:#2d2410;color:#fde5b0}
+.form.f3 .n{background:#0f2b20;color:#bdf0d9}
+.form h3{margin:0;font-size:16px;font-weight:700;flex:1;line-height:1.3;color:var(--tx)}
+.form .st{font-size:10.5px;font-weight:800;letter-spacing:.4px;padding:4px 9px;border-radius:99px;white-space:nowrap;
+  background:var(--card2);color:var(--tx3);border:1px solid var(--line)}
+.form .st.and{background:#2d2410;color:var(--wa);border-color:#5c4a19}
+.form .st.fim{background:#0f2b20;color:var(--ok);border-color:#1f5741}
+.form .desc{font-size:13px;color:var(--tx2);margin:10px 0 0;line-height:1.6}
+.form .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.form .tag{font-size:11px;color:var(--tx3);background:var(--bg2);border:1px solid var(--line);border-radius:7px;padding:3px 8px}
+.bar{height:5px;border-radius:3px;background:#0a1526;margin-top:12px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ac);width:0;transition:width .4s}
+.bar i.fim{background:var(--ok)}
+.form .go{display:flex;align-items:center;justify-content:space-between;margin-top:11px;font-size:13px;font-weight:650;color:var(--ac)}
+
+.passo{display:flex;gap:13px;margin-bottom:15px}
+.passo .num{width:27px;height:27px;border-radius:50%;background:var(--card2);border:1px solid var(--line);
+  display:grid;place-items:center;font-size:12.5px;font-weight:800;color:var(--ac);flex:none;margin-top:1px}
+.passo b{display:block;font-size:14.5px;margin-bottom:2px}
+.passo p{margin:0;font-size:13px;color:var(--tx2);line-height:1.6}
+
+.box{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:14px 15px;margin-bottom:11px}
+.box.wa{background:#2d2410;border-color:#5c4a19;color:#fde5b0}
+.box.info{background:#0d2436;border-color:#1a4460;color:#bfe4f8}
+.box b{display:block;margin-bottom:5px;font-size:14px}
+.box p{margin:0 0 9px;font-size:13px;line-height:1.65}
+.box p:last-child{margin-bottom:0}
+.box ul{margin:6px 0 0;padding-left:19px;font-size:13px;line-height:1.7}
+.box li{margin-bottom:4px}
+
+.acc{background:var(--card);border:1px solid var(--line);border-radius:13px;margin-bottom:11px;overflow:hidden}
+.acc>button{width:100%;display:flex;align-items:center;gap:10px;padding:13px 15px;text-align:left}
+.acc>button .t{flex:1;font-weight:650;font-size:14.5px}
+.acc>button .cv{font-size:12px;color:var(--tx3);transition:.2s}
+.acc.on>button .cv{transform:rotate(90deg)}
+.acc .in{display:none;padding:0 15px 15px;border-top:1px solid var(--line)}
+.acc.on .in{display:block}
+.acc .in p{font-size:13px;color:var(--tx2);line-height:1.7;margin:12px 0 0}
+.acc .in ul{font-size:13px;color:var(--tx2);line-height:1.7;margin:10px 0 0;padding-left:19px}
+
+.rowb{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.btn{background:var(--card2);border:1px solid var(--line);padding:11px 15px;border-radius:11px;font-size:13.5px;font-weight:650}
+.btn.p{background:var(--ac);color:#052539;border-color:var(--ac)}
+.btn.c{background:var(--cl);color:#2a0f06;border-color:var(--cl)}
+.btn.d{background:#33161a;color:var(--er);border-color:#5c2429}
+.btn.w{flex:1;min-width:150px;text-align:center}
+.btn:active{transform:scale(.98)}
+.btn[disabled]{opacity:.4;pointer-events:none}
+
+.mask{position:fixed;inset:0;background:rgba(3,7,15,.8);z-index:60;display:none;align-items:flex-end;justify-content:center}
+.mask.on{display:flex}
+.sheet{background:var(--bg2);border:1px solid var(--line);border-radius:16px 16px 0 0;width:100%;max-width:640px;max-height:90vh;overflow:auto;padding:16px 15px calc(20px + var(--safe))}
+.sheet h3{margin:0 0 4px;font-size:16px}
+.sheet .sh{font-size:12.5px;color:var(--tx3);margin-bottom:12px;line-height:1.6}
+.sheet textarea{width:100%;font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;min-height:200px;
+  background:var(--bg);color:var(--tx);border:1px solid var(--line);border-radius:9px;padding:10px}
+.tabs{display:flex;gap:6px;margin-bottom:10px}
+.tabs button{flex:1;padding:9px 0;border-radius:9px;background:var(--card);border:1px solid var(--line);font-size:12.5px;font-weight:650;color:var(--tx2)}
+.tabs button.on{background:var(--ac);border-color:var(--ac);color:#052539}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:30px;background:var(--ok);color:#06281c;padding:10px 17px;border-radius:99px;font-size:13px;font-weight:650;z-index:70;opacity:0;pointer-events:none;transition:.2s;max-width:88vw;text-align:center}
+.toast.on{opacity:1}
+footer{margin-top:26px;padding-top:16px;border-top:1px solid var(--line);font-size:11.5px;color:var(--tx3);line-height:1.7}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="mk">ANAMNESE EM TRÊS PARTES</div>
+  <h1>Antes de montar o programa,<br>é preciso saber de onde se parte</h1>
+  <p>Três questionários curtos: histórico médico, alimentação e treino. O que você responder aqui vira o seu aplicativo de registro diário, com as suas metas, os seus alimentos, os seus exercícios e os avisos ligados aos seus exames.</p>
+</div>
+
+<main>
+
+  <h2>Os três formulários</h2>
+  <p class="lead">Pode preencher na ordem que quiser, em dias diferentes, parando e voltando. Nada se perde.</p>
+  <div id="cards"></div>
+
+  <div class="box info" style="margin-top:14px">
+    <b>Quando terminar os três</b>
+    <p>Use o botão abaixo para juntar tudo num pacote só. É o que a pessoa que vai montar o seu programa precisa receber.</p>
+    <div class="rowb">
+      <button class="btn p w" id="bt-gerar" onclick="gerarTudo()">Juntar e enviar os três</button>
+      <button class="btn w" onclick="baixarTudo()">Baixar o pacote</button>
+    </div>
+  </div>
+
+  <h2>Como funciona</h2>
+  <p class="lead">Do formulário em branco ao aplicativo funcionando no seu celular.</p>
+
+  <div class="passo"><div class="num">1</div><div>
+    <b>Você responde</b>
+    <p>Leva de 30 a 45 minutos para os três, somados. Responda o que souber e deixe em branco o que não souber: campo vazio é informação também, e o que faltar será perguntado depois. Vale mais uma resposta honesta e aproximada do que uma resposta precisa e inventada.</p>
+  </div></div>
+
+  <div class="passo"><div class="num">2</div><div>
+    <b>O texto é gerado</b>
+    <p>Cada formulário monta um resumo organizado e um pacote de dados. Nada é enviado sozinho: você decide para quem mandar e por qual caminho.</p>
+  </div></div>
+
+  <div class="passo"><div class="num">3</div><div>
+    <b>O programa é montado</b>
+    <p>A partir das suas respostas saem o cardápio com as porções e as calorias já calculadas, as metas do dia, os seus exercícios com as cargas atuais e os avisos ancorados nos seus exames, não em regra genérica de aplicativo.</p>
+  </div></div>
+
+  <div class="passo"><div class="num">4</div><div>
+    <b>Você registra o dia a dia</b>
+    <p>O aplicativo se instala na tela inicial do celular, funciona sem internet e guarda os dados no seu próprio aparelho. Um toque por refeição, a carga da última vez aparecendo sozinha em cada exercício.</p>
+  </div></div>
+
+  <h2>O que perguntamos, e por quê</h2>
+  <p class="lead">Nenhuma pergunta está ali por praxe. Cada uma muda alguma decisão.</p>
+
+  <div class="acc"><button onclick="acc(this)"><span class="t">Por que tanta pergunta sobre saúde?</span><span class="cv">▸</span></button>
+    <div class="in"><p>Porque o histórico define os limites de tudo o que vem depois. Uma alteração no colesterol muda a gordura da dieta. Um achado na coluna muda a forma de agachar. Um exame de rim indeterminado muda quanta proteína é prudente comer. Sem isso, qualquer plano é chute bem-apresentado.</p>
+    <p>Você não precisa entender os exames: basta copiar os números do laudo. A leitura é nossa.</p></div></div>
+
+  <div class="acc"><button onclick="acc(this)"><span class="t">Por que perguntar há quanto tempo o peso está estável?</span><span class="cv">▸</span></button>
+    <div class="in"><p>Porque é a melhor conta de gasto energético que existe, e não custa exame nenhum. Se o seu peso não muda há meses, o que você come hoje é, por definição, o que você gasta. É olhar o saldo do extrato em vez de estimar o orçamento pela lista de despesas.</p>
+    <p>Toda equação de gasto calórico é aproximação. Essa é medição.</p></div></div>
+
+  <div class="acc"><button onclick="acc(this)"><span class="t">Por que pedir para pesar o scoop do suplemento?</span><span class="cv">▸</span></button>
+    <div class="in"><p>Porque scoops variam de 20 a 40 gramas entre marcas, e quase ninguém confere. Um erro aí desloca a conta de proteína do dia inteiro, e a conta errada vira meta errada, que vira resultado que não vem.</p>
+    <p>Encha o scoop como você enche todo dia, ponha na balança e anote o número. São dez segundos que valem por três semanas de ajuste.</p></div></div>
+
+  <div class="acc"><button onclick="acc(this)"><span class="t">Por que perguntar sobre o fim de semana e o álcool?</span><span class="cv">▸</span></button>
+    <div class="in"><p>Não é julgamento, é aritmética. Dois dias podem somar mais calorias do que a semana inteira de treino queima, e é comum a pessoa acertar de segunda a sexta e não entender por que o peso não anda.</p>
+    <p>O álcool não sai do plano. O que muda é a escala, e para mudar a escala é preciso primeiro saber qual ela é.</p></div></div>
+
+  <div class="acc"><button onclick="acc(this)"><span class="t">Por que listar o equipamento da academia?</span><span class="cv">▸</span></button>
+    <div class="in"><p>Porque prescrever o que não existe no lugar onde você treina é perder tempo dos dois lados. E há um detalhe que quase ninguém anota: de quanto em quanto sobem os halteres. Se o menor salto é de 2 kg, não existe evoluir de 1 em 1, e o programa precisa saber disso para propor progressão possível.</p>
+    <p>Se preferir, fotografe os ambientes e mande as fotos junto.</p></div></div>
+
+  <div class="acc"><button onclick="acc(this)"><span class="t">O que fazem os blocos amarelos?</span><span class="cv">▸</span></button>
+    <div class="in"><p>São as seções do profissional, ocultas por padrão. É onde entram o cálculo do gasto energético, os macros, as contraindicações e a prescrição. Se você é quem responde, pode ignorar; o interruptor no topo de cada formulário revela quando for a hora.</p></div></div>
+
+  <h2>Seus dados</h2>
+  <div class="box wa">
+    <b>Onde eles ficam</b>
+    <p>Tudo o que você digita fica guardado <b>neste aparelho</b>, no armazenamento do navegador. Não existe cadastro, não existe servidor e nada sai daqui sozinho. Se você limpar os dados de navegação, as respostas somem: por isso vale gerar e enviar o pacote assim que terminar.</p>
+    <p>São informações sensíveis de saúde. Compartilhe apenas com quem for de fato conduzir o seu acompanhamento e guarde o arquivo em local restrito.</p>
+    <div class="rowb"><button class="btn d" onclick="apagarTudo()">Apagar tudo deste aparelho</button></div>
+  </div>
+
+  <div class="box">
+    <b>Para quem vai aplicar isto em outras pessoas</b>
+    <p>Hospede os quatro arquivos no mesmo endereço e mande o link desta página. Os formulários gravam por aparelho e por endereço, então cada pessoa que abrir no próprio celular tem os dados dela, isolados.</p>
+    <p>Duas pessoas no mesmo aparelho, porém, sobrescrevem uma à outra. Nesse caso, peça para a primeira gerar e baixar o pacote antes de a segunda começar, e depois use o botão de apagar.</p>
+  </div>
+
+  <footer>
+    Material de apoio gerado por inteligência artificial. Não substitui consulta médica, avaliação nutricional nem prescrição de profissional de educação física. Os formulários coletam dados sensíveis de saúde e devem ser tratados como tal.
+  </footer>
+</main>
+
+<div class="mask" id="mask" onclick="if(event.target===this)fechar()"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const FORMS = [
+  {id:'medico', arq:'form-1-medico.html', cls:'f1', n:'1',
+   titulo:'Histórico médico',
+   desc:'Condições de saúde, cirurgias, medicações, exames de sangue e de imagem, dores e limitações do corpo, sono e histórico familiar.',
+   tags:['13 seções','57 campos','15 a 20 min','tenha os laudos por perto']},
+  {id:'nutricao', arq:'form-2-nutricao.html', cls:'f2', n:'2',
+   titulo:'Nutrição',
+   desc:'Medidas do corpo, histórico de peso, o que você come em um dia comum, o fim de semana, preferências, restrições e suplementos.',
+   tags:['11 seções','66 campos','15 min','tenha o rótulo do suplemento']},
+  {id:'treino', arq:'form-3-treino.html', cls:'f3', n:'3',
+   titulo:'Atividade física',
+   desc:'Prontidão para o exercício, rotina de treino, os exercícios de cada dia com séries e cargas, cardio, equipamento disponível e limitações.',
+   tags:['11 seções','63 campos','15 min','tenha a ficha de treino']}
+];
+
+function meta(id){ try{ return JSON.parse(localStorage.getItem('rodform_'+id+'_meta')) || null; }catch(e){ return null; } }
+function resumoDe(id){ try{ return localStorage.getItem('rodform_'+id+'_resumo') || ''; }catch(e){ return ''; } }
+function dadosDe(id){ try{ return JSON.parse(localStorage.getItem('rodform_'+id)) || null; }catch(e){ return null; } }
+
+function cards(){
+  document.getElementById('cards').innerHTML = FORMS.map(f=>{
+    const m = meta(f.id);
+    const pct = m && m.req ? Math.round(m.ok/m.req*100) : 0;
+    const fim = m && m.req && m.ok===m.req;
+    const st = !m || !m.campos ? '<span class="st">não iniciado</span>'
+             : (fim ? '<span class="st fim">completo</span>' : '<span class="st and">'+pct+'%</span>');
+    return `<a class="form ${f.cls}" href="${f.arq}">
+      <div class="top"><div class="n">${f.n}</div><h3>${f.titulo}</h3>${st}</div>
+      <p class="desc">${f.desc}</p>
+      <div class="meta">${f.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+      <div class="bar"><i class="${fim?'fim':''}" style="width:${pct}%"></i></div>
+      <div class="go"><span>${!m||!m.campos?'Começar':(fim?'Revisar':'Continuar')}</span><span>›</span></div>
+    </a>`;
+  }).join('');
+  const algum = FORMS.some(f=>{ const m=meta(f.id); return m && m.campos; });
+  document.getElementById('bt-gerar').disabled = !algum;
+}
+
+function pacoteCompleto(){
+  const partes = {};
+  FORMS.forEach(f=>{ const d=dadosDe(f.id); if(d && Object.keys(d).length) partes[f.id]=d; });
+  const m = meta('medico')||meta('nutricao')||meta('treino')||{};
+  return JSON.stringify({formulario:'rod-saude-completo', versao:1, pessoa:(m.nome||''), partes}, null, 1);
+}
+function textoCompleto(){
+  const L=[];
+  L.push('ANAMNESE COMPLETA — rod-saude');
+  const m = meta('medico')||meta('nutricao')||meta('treino')||{};
+  if(m.nome) L.push('Pessoa: '+m.nome);
+  const feitos = FORMS.filter(f=>{ const x=meta(f.id); return x && x.campos; });
+  L.push('Formulários preenchidos: '+(feitos.length?feitos.map(f=>f.titulo).join(', '):'nenhum'));
+  const faltando = FORMS.filter(f=>{ const x=meta(f.id); return !x || !x.campos; });
+  if(faltando.length) L.push('AINDA NÃO PREENCHIDOS: '+faltando.map(f=>f.titulo).join(', '));
+  L.push('');
+  FORMS.forEach(f=>{ const r=resumoDe(f.id); if(r){ L.push(r); L.push(''); L.push('---'); L.push(''); } });
+  L.push('Com base nisto, monte o perfil para o app rod-saude: cardápio com macros, metas do dia, marcadores da aba de saúde, alertas ancorados nos achados e biblioteca de exercícios. Sinalize o que ficou faltando e o que precisa de confirmação médica antes de virar prescrição.');
+  return L.join('\n');
+}
+
+function gerarTudo(){
+  const feitos = FORMS.filter(f=>{ const m=meta(f.id); return m && m.campos; });
+  const faltam = FORMS.filter(f=>{ const m=meta(f.id); return !m || !m.campos; });
+  abrir(`<h3>Pacote dos formulários</h3>
+    <div class="sh">${feitos.length} de 3 preenchidos.${faltam.length?' Falta: <b>'+faltam.map(f=>f.titulo).join(', ')+'</b>. Dá para enviar assim mesmo.':' Tudo pronto.'}</div>
+    <div class="tabs"><button id="t1" class="on" onclick="aba(1)">Resumo em texto</button><button id="t2" onclick="aba(2)">Pacote de dados</button></div>
+    <textarea id="out" readonly>${textoCompleto().replace(/&/g,'&amp;').replace(/</g,'&lt;')}</textarea>
+    <div class="rowb">
+      <button class="btn p" onclick="copiar(document.getElementById('out').value)">Copiar</button>
+      <button class="btn c" onclick="enviar()">Enviar</button>
+      <button class="btn" onclick="baixarTudo()">Baixar .json</button>
+      <button class="btn" onclick="fechar()">Fechar</button>
+    </div>
+    <div class="sh" style="margin-top:12px">O <b>resumo em texto</b> serve para colar numa conversa ou num e-mail. O <b>pacote de dados</b> é o formato estruturado, que evita redigitar tudo. Na dúvida, envie os dois.</div>`);
+}
+function aba(n){
+  document.getElementById('t1').classList.toggle('on',n===1);
+  document.getElementById('t2').classList.toggle('on',n===2);
+  document.getElementById('out').value = n===1 ? textoCompleto() : pacoteCompleto();
+}
+async function enviar(){
+  const txt = document.getElementById('out').value;
+  if(navigator.share){ try{ await navigator.share({text:txt, title:'Anamnese rod-saude'}); return; }catch(e){ if(e.name==='AbortError') return; } }
+  copiar(txt);
+}
+function baixarTudo(){
+  const m = meta('medico')||meta('nutricao')||meta('treino')||{};
+  const nome = (m.nome||'sem nome').trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9\-]/g,'') || 'sem-nome';
+  const d=new Date(); const dd=String(d.getDate()).padStart(2,'0')+String(d.getMonth()+1).padStart(2,'0')+d.getFullYear();
+  const b=new Blob([pacoteCompleto()],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b);
+  a.download = nome+' - anamnese completa - '+dd+'.json'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000); msg('Pacote gerado');
+}
+function apagarTudo(){
+  if(!confirm('Apagar as respostas dos três formulários neste aparelho? Gere o pacote antes, se ainda não gerou.')) return;
+  if(!confirm('Confirma? Não tem volta.')) return;
+  FORMS.forEach(f=>{ ['','_meta','_resumo'].forEach(s=>localStorage.removeItem('rodform_'+f.id+s)); });
+  cards(); msg('Tudo apagado');
+}
+function copiar(t){
+  if(navigator.clipboard&&window.isSecureContext) navigator.clipboard.writeText(t).then(()=>msg('Copiado'),()=>fb(t)); else fb(t);
+  function fb(x){ const a=document.createElement('textarea'); a.value=x; a.style.position='fixed'; a.style.opacity='0';
+    document.body.appendChild(a); a.select(); try{document.execCommand('copy'); msg('Copiado');}catch(e){msg('Não foi possível copiar');} a.remove(); }
+}
+function acc(b){ b.parentElement.classList.toggle('on'); }
+function abrir(h){ document.getElementById('sheet').innerHTML=h; document.getElementById('mask').classList.add('on'); }
+function fechar(){ document.getElementById('mask').classList.remove('on'); }
+let tmo; function msg(t){ const e=document.getElementById('toast'); e.textContent=t; e.classList.add('on');
+  clearTimeout(tmo); tmo=setTimeout(()=>e.classList.remove('on'),1900); }
+
+cards();
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) cards(); });
+window.addEventListener('pageshow',()=>cards());
+</script>
+</body>
+</html>

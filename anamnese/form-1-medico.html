@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>Anamnese — histórico médico</title>
+<style>
+:root{--bg:#0b1220;--bg2:#111c31;--card:#16233c;--card2:#1c2c49;--line:#25375a;
+--tx:#e8eefb;--tx2:#9fb0cd;--tx3:#6c7f9f;--ac:#38bdf8;--ok:#34d399;--wa:#fbbf24;--er:#f87171;--cl:#d97757;
+--safe:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;padding-bottom:calc(96px + var(--safe))}
+button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--tx);background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:9px 10px;width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--ac);outline-offset:-1px}
+input[type=number]{-moz-appearance:textfield}
+input.err,textarea.err,select.err{border-color:var(--er)}
+header{position:sticky;top:0;z-index:40;background:rgba(11,18,32,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:12px 14px 10px}
+header h1{margin:0;font-size:17px;font-weight:700;letter-spacing:.2px}
+header .sub{font-size:12px;color:var(--tx3);margin-top:3px;line-height:1.45}
+.prog{height:5px;background:#0a1526;border-radius:3px;margin-top:9px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--ac);width:0;transition:width .3s}
+.progtx{font-size:11px;color:var(--tx3);margin-top:5px;display:flex;justify-content:space-between}
+main{padding:12px 14px 20px;max-width:820px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:13px;margin-bottom:11px;overflow:hidden}
+.chead{display:flex;align-items:center;gap:9px;padding:12px 13px;cursor:pointer;user-select:none}
+.chead .nu{font-size:11px;font-weight:800;color:var(--ac);background:#0d2436;padding:3px 8px;border-radius:6px;min-width:26px;text-align:center}
+.chead .nm{flex:1;font-weight:650;font-size:14.5px;line-height:1.3}
+.chead .cv{font-size:12px;color:var(--tx3);transition:transform .2s}
+.chead.open .cv{transform:rotate(90deg)}
+.tagP{font-size:9.5px;font-weight:800;letter-spacing:.4px;padding:3px 7px;border-radius:99px;background:#0f2b20;color:var(--ok);border:1px solid #1f5741;white-space:nowrap}
+.tagV{font-size:9.5px;font-weight:800;letter-spacing:.4px;padding:3px 7px;border-radius:99px;background:#3a2a12;color:var(--wa);border:1px solid #5c4a19;white-space:nowrap}
+.cbody{display:none;padding:4px 13px 14px;border-top:1px solid var(--line)}
+.cbody.open{display:block}
+.card.prof{border-color:#5c4a19}
+.f{margin-top:13px}
+.f>label{display:block;font-size:12.5px;font-weight:600;color:var(--tx2);margin-bottom:5px;line-height:1.4}
+.f .req{color:var(--er)}
+.f .aj{font-size:11px;color:var(--tx3);margin-top:5px;line-height:1.45}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:520px){.grid2{grid-template-columns:1fr}}
+.ops{display:flex;flex-wrap:wrap;gap:7px}
+.op{background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:8px 13px;font-size:12.5px;color:var(--tx2);line-height:1.2}
+.op.on{background:var(--ac);border-color:var(--ac);color:#052539;font-weight:700}
+.op.on.wa{background:var(--wa);border-color:var(--wa);color:#2d2410}
+.esc{display:flex;gap:5px;flex-wrap:wrap}
+.esc button{width:34px;height:34px;border-radius:9px;background:var(--bg2);border:1px solid var(--line);font-size:13px;font-weight:700;color:var(--tx2)}
+.esc button.on{background:var(--ac);border-color:var(--ac);color:#052539}
+table.rep{width:100%;border-collapse:collapse;margin-top:4px}
+table.rep th{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);text-align:left;padding:0 4px 5px;font-weight:700}
+table.rep td{padding:3px 3px}
+table.rep input,table.rep select{padding:7px 7px;font-size:12.5px}
+.repwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.delrow{color:var(--er);font-size:16px;padding:2px 5px;opacity:.7}
+.btn{background:var(--card2);border:1px solid var(--line);padding:9px 13px;border-radius:10px;font-size:13px;font-weight:650}
+.btn.p{background:var(--ac);color:#052539;border-color:var(--ac)}
+.btn.c{background:var(--cl);color:#2a0f06;border-color:var(--cl)}
+.btn.sm{padding:6px 11px;font-size:12px}
+.btn:active{transform:scale(.98)}
+.rowb{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}
+.nota{background:#0d2436;border:1px solid #1a4460;color:#bfe4f8;border-radius:11px;padding:11px 13px;font-size:12.5px;line-height:1.5;margin-bottom:11px}
+.nota>b:first-child{display:block;margin-bottom:3px}
+.nota.wa{background:#2d2410;border-color:#5c4a19;color:#fde5b0}
+footer{position:fixed;bottom:0;left:0;right:0;z-index:50;background:rgba(17,28,49,.97);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:10px 14px calc(10px + var(--safe));display:flex;gap:8px;justify-content:center}
+footer .btn{flex:1;max-width:260px;text-align:center}
+.mask{position:fixed;inset:0;background:rgba(3,7,15,.8);z-index:60;display:none;align-items:flex-end;justify-content:center}
+.mask.on{display:flex}
+.sheet{background:var(--bg2);border:1px solid var(--line);border-radius:16px 16px 0 0;width:100%;max-width:640px;max-height:90vh;overflow:auto;padding:16px 15px calc(20px + var(--safe))}
+.sheet h3{margin:0 0 4px;font-size:16px}
+.sheet .sh{font-size:12px;color:var(--tx3);margin-bottom:12px;line-height:1.5}
+.sheet textarea{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;min-height:190px}
+.tabs{display:flex;gap:6px;margin-bottom:10px}
+.tabs button{flex:1;padding:8px 0;border-radius:9px;background:var(--card);border:1px solid var(--line);font-size:12.5px;font-weight:650;color:var(--tx2)}
+.tabs button.on{background:var(--ac);border-color:var(--ac);color:#052539}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + var(--safe));background:var(--ok);color:#06281c;padding:9px 16px;border-radius:99px;font-size:13px;font-weight:650;z-index:70;opacity:0;pointer-events:none;transition:opacity .2s;max-width:88vw;text-align:center}
+.toast.on{opacity:1}
+.sw{display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:9px 12px;margin-bottom:11px;font-size:12.5px;color:var(--tx2)}
+.sw b{color:var(--tx)}
+.sw .tg{margin-left:auto;width:46px;height:26px;border-radius:99px;background:var(--line);position:relative;flex:none}
+.sw .tg i{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--tx3);transition:.2s}
+.sw.on .tg{background:var(--ac)} .sw.on .tg i{left:23px;background:#052539}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Anamnese — histórico médico</h1>
+  <div class="sub">Base clínica do acompanhamento. É o que define os limites de tudo o que vem depois: dieta, treino e metas.</div>
+  <div class="prog"><i id="pi"></i></div>
+  <div class="progtx"><span id="pt">0 de 0 campos essenciais</span><span id="ps">salvo automaticamente</span></div>
+</header>
+
+<main>
+  <div class="nota">
+    <b>Como funciona</b>
+    Preencha o que souber; nada é obrigatório para salvar. O que você digita fica guardado neste aparelho e não é enviado a lugar nenhum sozinho. Ao final, o botão <b>Gerar</b> monta um resumo em texto e um pacote de dados para você enviar a quem vai montar o programa.
+  </div>
+  <div class="nota wa">
+    <b>Dados de saúde</b>
+    Este formulário reúne informação sensível. Só compartilhe com quem for de fato cuidar do seu acompanhamento, e guarde o arquivo gerado em local restrito. Nada aqui substitui consulta médica.
+  </div>
+
+  <div class="sw" id="swp" onclick="togProf()">
+    <div><b>Mostrar os blocos do profissional</b><br><span style="font-size:11px;color:var(--tx3)">Blocos marcados em amarelo, preenchidos por quem conduz o atendimento.</span></div>
+    <div class="tg"><i></i></div>
+  </div>
+
+  <div id="secoes"></div>
+</main>
+
+<footer>
+  <button class="btn" onclick="limpar()">Limpar</button>
+  <button class="btn c" onclick="salvarArquivo()">Baixar</button>
+  <button class="btn p" onclick="gerar()">Gerar</button>
+</footer>
+
+<div class="mask" id="mask" onclick="if(event.target===this)fechar()">
+  <div class="sheet" id="sheet"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SPEC = {"id": "medico", "versao": 1, "titulo": "Anamnese — histórico médico", "sub": "Base clínica do acompanhamento. É o que define os limites de tudo o que vem depois: dieta, treino e metas.", "secoes": [{"id": "ident", "nome": "Identificação", "quem": "P", "campos": [{"id": "nome", "l": "Nome completo", "t": "text", "req": true}, {"id": "nasc", "l": "Data de nascimento", "t": "date", "req": true}, {"id": "sexo", "l": "Sexo biológico", "t": "radio", "op": ["Masculino", "Feminino"], "req": true, "aj": "Necessário porque as equações de gasto energético e as faixas de referência de vários exames diferem."}, {"id": "contato", "l": "Telefone ou e-mail", "t": "text"}, {"id": "prof", "l": "Profissão e rotina de trabalho", "t": "textarea", "rows": 2, "ph": "ex.: advogado, das 8h às 12h e das 13h30 às 17h30, sentado a maior parte do dia"}, {"id": "data_form", "l": "Data de preenchimento", "t": "date", "req": true}]}, {"id": "objetivo", "nome": "O que trouxe você aqui", "quem": "P", "campos": [{"id": "queixa", "l": "Qual o seu objetivo principal", "t": "textarea", "rows": 3, "req": true, "ph": "ex.: perder gordura sem perder massa; melhorar o colesterol; voltar a treinar sem dor"}, {"id": "preocupa", "l": "O que mais preocupa você na sua saúde hoje", "t": "textarea", "rows": 2}, {"id": "tentou", "l": "O que já tentou antes e como terminou", "t": "textarea", "rows": 2}]}, {"id": "cond", "nome": "Condições de saúde", "quem": "P", "campos": [{"id": "cond_lista", "l": "Você tem ou já teve alguma destas condições", "t": "check", "op": ["Pressão alta", "Diabetes", "Pré-diabetes", "Colesterol alto", "Triglicerídeos altos", "Problema de tireoide", "Doença renal", "Doença do fígado", "Gastrite ou refluxo", "Doença intestinal", "Asma ou bronquite", "Apneia do sono", "Arritmia", "Infarto ou angina", "AVC", "Trombose", "Anemia", "Gota", "Osteoporose", "Artrose", "Hérnia de disco", "Depressão ou ansiedade", "Câncer", "Nenhuma dessas"], "aj": "Marque todas que se aplicam. Se não souber o nome exato, descreva no campo abaixo."}, {"id": "cond_obs", "l": "Detalhe cada condição marcada: desde quando, como está hoje, quem acompanha", "t": "textarea", "rows": 4}, {"id": "cond_outras", "l": "Outras condições não listadas", "t": "textarea", "rows": 2}, {"id": "internacoes", "l": "Internações relevantes", "t": "tabela", "cols": [{"id": "motivo", "l": "Motivo", "w": 170}, {"id": "quando", "l": "Quando", "w": 90, "ph": "mm/aaaa"}, {"id": "obs", "l": "Observação", "w": 160}]}]}, {"id": "cirurgias", "nome": "Cirurgias e lesões", "quem": "P", "campos": [{"id": "cirurgias", "l": "Cirurgias que você já fez", "t": "tabela", "cols": [{"id": "qual", "l": "Qual", "w": 180, "ph": "ex.: artroscopia de joelho E"}, {"id": "quando", "l": "Quando", "w": 90, "ph": "mm/aaaa"}, {"id": "lado", "l": "Lado", "w": 90, "op": ["Direito", "Esquerdo", "Bilateral", "Não se aplica"]}, {"id": "resultado", "l": "Como ficou", "w": 150, "ph": "ex.: sem dor, força boa"}]}, {"id": "fraturas", "l": "Fraturas, entorses ou lesões importantes", "t": "textarea", "rows": 2}, {"id": "protese", "l": "Usa prótese, placa, pino ou marca-passo?", "t": "textarea", "rows": 2}]}, {"id": "med", "nome": "Medicações, suplementos e alergias", "quem": "P", "campos": [{"id": "medicacoes", "l": "Medicações de uso contínuo", "t": "tabela", "cols": [{"id": "nome", "l": "Remédio", "w": 150}, {"id": "dose", "l": "Dose", "w": 90, "ph": "ex.: 20 mg"}, {"id": "freq", "l": "Quantas vezes", "w": 110, "ph": "ex.: 1x ao dia"}, {"id": "para", "l": "Para quê", "w": 140}, {"id": "desde", "l": "Desde", "w": 90, "ph": "mm/aaaa"}], "aj": "Inclua anticoncepcional, anti-hipertensivo, estatina, antidepressivo e qualquer uso contínuo, mesmo o que parecer sem importância."}, {"id": "med_esporadico", "l": "Remédios que usa de vez em quando", "t": "textarea", "rows": 2, "ph": "ex.: anti-inflamatório para dor nas costas, 2 a 3 vezes por mês"}, {"id": "alergia_med", "l": "Alergia a medicamentos", "t": "textarea", "rows": 2}, {"id": "alergia_alim", "l": "Alergia ou intolerância alimentar", "t": "textarea", "rows": 2, "ph": "ex.: intolerância à lactose; alergia a camarão"}, {"id": "suple_uso", "l": "Usa suplementos hoje?", "t": "radio", "op": ["Sim", "Não"], "aj": "O detalhamento fica no formulário de nutrição."}]}, {"id": "labs", "nome": "Exames de sangue recentes", "quem": "P", "intro": "Preencha o que tiver no laudo mais recente. Se tiver o PDF, pode simplesmente anexar depois e deixar em branco aqui.", "campos": [{"id": "lab_data", "l": "Data da coleta mais recente", "t": "date"}, {"id": "lab_lab", "l": "Laboratório", "t": "text"}, {"id": "lab_valores", "l": "Valores", "t": "tabela", "cols": [{"id": "marcador", "l": "Marcador", "w": 180, "op": ["Glicose", "Hemoglobina glicada (HbA1c)", "Insulina", "Colesterol total", "LDL", "HDL", "Triglicerídeos", "Creatinina", "TFGe", "Ureia", "Ácido úrico", "TGO/AST", "TGP/ALT", "GGT", "TSH", "T4 livre", "Vitamina D", "Vitamina B12", "Ferritina", "Ferro", "Hemoglobina", "Hematócrito", "Leucócitos", "Plaquetas", "PCR", "Cálcio", "Sódio", "Potássio", "Magnésio", "Zinco", "Testosterona total", "Estradiol", "PSA total", "CPK", "Cistatina C", "Outro"]}, {"id": "valor", "l": "Valor", "w": 90}, {"id": "unid", "l": "Unidade", "w": 90}, {"id": "ref", "l": "Referência", "w": 110, "ph": "ex.: 70-99"}]}, {"id": "lab_outros", "l": "Outros exames ou observações do laudo", "t": "textarea", "rows": 2}, {"id": "lab_pendente", "l": "Exames que o médico pediu e você ainda não fez", "t": "textarea", "rows": 2}]}, {"id": "imagem", "nome": "Exames de imagem e laudos", "quem": "P", "campos": [{"id": "imagens", "l": "Exames de imagem já realizados", "t": "tabela", "cols": [{"id": "exame", "l": "Exame", "w": 120, "op": ["Raio-X", "Ultrassom", "Tomografia", "Ressonância", "Densitometria", "Ecocardiograma", "Endoscopia", "Colonoscopia", "ECG", "Teste ergométrico", "Outro"]}, {"id": "regiao", "l": "Região", "w": 130, "ph": "ex.: coluna lombar"}, {"id": "quando", "l": "Quando", "w": 90, "ph": "mm/aaaa"}, {"id": "achado", "l": "Principal achado", "w": 220}]}, {"id": "imagem_obs", "l": "Algum laudo com achado que preocupa você", "t": "textarea", "rows": 2}]}, {"id": "osteo", "nome": "Dores e limitações do corpo", "quem": "P", "intro": "Esta seção é a que mais orienta a montagem do treino. Seja específico: onde dói, quando dói e o que piora.", "campos": [{"id": "dor_regioes", "l": "Onde você sente ou já sentiu dor com frequência", "t": "check", "op": ["Pescoço", "Coluna torácica", "Coluna lombar", "Ombro direito", "Ombro esquerdo", "Cotovelo direito", "Cotovelo esquerdo", "Punho ou mão", "Quadril", "Joelho direito", "Joelho esquerdo", "Tornozelo ou pé", "Não sinto dor"]}, {"id": "dor_detalhe", "l": "Descreva cada dor marcada", "t": "textarea", "rows": 4, "ph": "ex.: lombar, dói ao levantar peso do chão, melhorou muito depois que comecei a treinar"}, {"id": "dor_nivel", "l": "Nível da pior dor na última semana (0 = nenhuma, 10 = insuportável)", "t": "escala", "max": 10}, {"id": "dor_limita", "l": "Alguma dor impede você de fazer algum movimento?", "t": "textarea", "rows": 2}, {"id": "fisio", "l": "Faz ou já fez fisioterapia? Para quê e quando?", "t": "textarea", "rows": 2}]}, {"id": "sono", "nome": "Sono, energia e estresse", "quem": "P", "campos": [{"id": "sono_dorme", "l": "Que horas costuma dormir", "t": "text", "ph": "ex.: 22h"}, {"id": "sono_acorda", "l": "Que horas costuma acordar", "t": "text", "ph": "ex.: 4h30"}, {"id": "sono_qual", "l": "Qualidade do sono (0 = péssima, 10 = ótima)", "t": "escala", "max": 10}, {"id": "sono_problemas", "l": "Alguma dessas situações acontece", "t": "check", "op": ["Ronco alto", "Alguém já disse que paro de respirar dormindo", "Acordo cansado", "Demoro a pegar no sono", "Acordo várias vezes", "Sonolência durante o dia", "Uso CPAP", "Uso remédio para dormir", "Nada disso"]}, {"id": "energia", "l": "Nível de energia no dia a dia (0 a 10)", "t": "escala", "max": 10}, {"id": "estresse", "l": "Nível de estresse (0 a 10)", "t": "escala", "max": 10}]}, {"id": "habitos", "nome": "Hábitos", "quem": "P", "campos": [{"id": "fuma", "l": "Fuma ou já fumou?", "t": "radio", "op": ["Nunca fumei", "Fumo atualmente", "Parei"]}, {"id": "fuma_det", "l": "Se fuma ou parou: quanto e por quanto tempo", "t": "text"}, {"id": "alcool_freq", "l": "Com que frequência bebe álcool", "t": "radio", "op": ["Não bebo", "Raramente", "Só no fim de semana", "2 a 3 vezes por semana", "Quase todo dia"], "aj": "A quantidade detalhada fica no formulário de nutrição, porque entra na conta de calorias."}, {"id": "agua_dia", "l": "Quanta água você bebe por dia, aproximadamente", "t": "text", "ph": "ex.: 2,5 litros"}, {"id": "outras_subst", "l": "Usa alguma outra substância que valha registrar", "t": "textarea", "rows": 2}]}, {"id": "familia", "nome": "Histórico familiar", "quem": "P", "intro": "Doenças em pais, irmãos e avós. Serve para calibrar o risco e priorizar rastreios.", "campos": [{"id": "fam_lista", "l": "Alguém da família próxima teve", "t": "check", "op": ["Infarto antes dos 60", "AVC", "Pressão alta", "Diabetes", "Colesterol alto", "Câncer", "Doença renal", "Doença de tireoide", "Osteoporose", "Alzheimer", "Nenhum desses", "Não sei"]}, {"id": "fam_det", "l": "Quem e com que idade", "t": "textarea", "rows": 3, "ph": "ex.: pai, infarto aos 58"}]}, {"id": "rastreio", "nome": "Rastreios e vacinas", "quem": "P", "campos": [{"id": "ult_consulta", "l": "Data da última consulta médica de rotina", "t": "date"}, {"id": "rastreios", "l": "Exames de rastreio já feitos", "t": "check", "op": ["Colonoscopia", "PSA", "Mamografia", "Papanicolau", "Densitometria óssea", "Teste ergométrico", "Nenhum"]}, {"id": "rastreio_obs", "l": "Quando foram e qual o resultado", "t": "textarea", "rows": 2}, {"id": "vacinas", "l": "Vacinação em dia?", "t": "radio", "op": ["Sim", "Não", "Não sei"]}]}, {"id": "prof_med", "nome": "Avaliação do profissional", "quem": "V", "intro": "Preenchido por quem conduz o atendimento.", "campos": [{"id": "p_sinais", "l": "Sinais de alerta identificados", "t": "textarea", "rows": 3}, {"id": "p_contra", "l": "Contraindicações ou cuidados que limitam dieta e treino", "t": "textarea", "rows": 3}, {"id": "p_encaminha", "l": "Encaminhamentos necessários antes de iniciar", "t": "textarea", "rows": 2}, {"id": "p_exames", "l": "Exames a solicitar, com justificativa", "t": "tabela", "cols": [{"id": "exame", "l": "Exame", "w": 170}, {"id": "motivo", "l": "Motivo", "w": 230}, {"id": "prazo", "l": "Prazo", "w": 100}]}, {"id": "p_perguntas", "l": "Perguntas para a pessoa levar ao médico", "t": "textarea", "rows": 4}, {"id": "p_libera", "l": "Liberado para iniciar programa de exercício?", "t": "radio", "op": ["Sim, sem restrição", "Sim, com restrições", "Não, aguardar avaliação médica"]}, {"id": "p_obs", "l": "Observações gerais", "t": "textarea", "rows": 3}]}]};
+const KEY = 'rodform_' + SPEC.id;
+let R = carregar();
+let verProf = false;
+let abertas = new Set([SPEC.secoes[0].id]);
+
+function carregar(){ try{ return JSON.parse(localStorage.getItem(KEY)) || {}; }catch(e){ return {}; } }
+function salvar(){ try{
+  localStorage.setItem(KEY, JSON.stringify(R));
+  const req = todos().filter(x=>x.c.req);
+  localStorage.setItem(KEY+'_meta', JSON.stringify({
+    titulo:SPEC.titulo, id:SPEC.id, req:req.length,
+    ok:req.filter(x=>preenchido(x.c)).length,
+    campos:Object.keys(R).length,
+    nome:R.nome||'', atualizado:new Date().toLocaleDateString('sv')}));
+  localStorage.setItem(KEY+'_resumo', resumo());
+}catch(e){} }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+let tmo; function msg(t){ const e=document.getElementById('toast'); e.textContent=t; e.classList.add('on');
+  clearTimeout(tmo); tmo=setTimeout(()=>e.classList.remove('on'),1900); }
+
+/* ---------- render ---------- */
+function render(){
+  const alvo = document.getElementById('secoes');
+  alvo.innerHTML = SPEC.secoes.map((s,i)=>{
+    if(s.quem==='V' && !verProf) return '';
+    const ab = abertas.has(s.id);
+    const tag = s.quem==='V' ? '<span class="tagV">PROFISSIONAL</span>'
+              : (s.quem==='PV' ? '<span class="tagP">PESSOA</span><span class="tagV">+ PROF.</span>' : '<span class="tagP">PESSOA</span>');
+    return `<div class="card ${s.quem==='V'?'prof':''}">
+      <div class="chead ${ab?'open':''}" onclick="tog('${s.id}')">
+        <span class="nu">${i+1}</span><span class="nm">${esc(s.nome)}</span>${tag}<span class="cv">▸</span>
+      </div>
+      <div class="cbody ${ab?'open':''}">
+        ${s.intro?`<div class="aj" style="font-size:11.5px;color:var(--tx3);margin-top:10px;line-height:1.5">${esc(s.intro)}</div>`:''}
+        ${s.campos.map(c=>campo(c)).join('')}
+      </div></div>`;
+  }).join('');
+  progresso();
+}
+function tog(id){ if(abertas.has(id)) abertas.delete(id); else abertas.add(id); render(); }
+function togProf(){ verProf=!verProf; document.getElementById('swp').classList.toggle('on',verProf); render(); }
+
+function campo(c){
+  const v = R[c.id];
+  const lab = `<label>${esc(c.l)}${c.req?' <span class="req">*</span>':''}</label>`;
+  const aj = c.aj?`<div class="aj">${esc(c.aj)}</div>`:'';
+  let ctrl='';
+  if(c.t==='text' || c.t==='date' || c.t==='number' || c.t==='tel' || c.t==='email'){
+    const im = c.t==='number' ? ' inputmode="decimal"' : '';
+    ctrl = `<input type="${c.t}"${im} id="c_${c.id}" value="${esc(v==null?'':v)}" placeholder="${esc(c.ph||'')}" oninput="setv('${c.id}',this.value)">`;
+  } else if(c.t==='textarea'){
+    ctrl = `<textarea id="c_${c.id}" rows="${c.rows||3}" placeholder="${esc(c.ph||'')}" oninput="setv('${c.id}',this.value)">${esc(v==null?'':v)}</textarea>`;
+  } else if(c.t==='radio'){
+    ctrl = `<div class="ops">${c.op.map(o=>`<button type="button" class="op ${v===o?'on':''}" onclick="setv('${c.id}',${v===o?'null':JSON.stringify(o).replace(/"/g,'&quot;')})">${esc(o)}</button>`).join('')}</div>`;
+  } else if(c.t==='check'){
+    const arr = Array.isArray(v)?v:[];
+    ctrl = `<div class="ops">${c.op.map(o=>`<button type="button" class="op ${arr.includes(o)?'on wa':''}" onclick="togm('${c.id}',${JSON.stringify(o).replace(/"/g,'&quot;')})">${esc(o)}</button>`).join('')}</div>`;
+  } else if(c.t==='escala'){
+    const max = c.max||10;
+    let b=''; for(let i=0;i<=max;i++) b+=`<button type="button" class="${v===i?'on':''}" onclick="setv('${c.id}',${v===i?'null':i})">${i}</button>`;
+    ctrl = `<div class="esc">${b}</div>`;
+  } else if(c.t==='tabela'){
+    const linhas = Array.isArray(v)&&v.length?v:[{}];
+    ctrl = `<div class="repwrap"><table class="rep"><thead><tr>${c.cols.map(k=>`<th style="min-width:${k.w||110}px">${esc(k.l)}</th>`).join('')}<th></th></tr></thead>
+      <tbody>${linhas.map((ln,i)=>`<tr>${c.cols.map(k=>{
+        if(k.op) return `<td><select onchange="setcel('${c.id}',${i},'${k.id}',this.value)">
+            <option value="">—</option>${k.op.map(o=>`<option ${ln[k.id]===o?'selected':''}>${esc(o)}</option>`).join('')}</select></td>`;
+        return `<td><input type="${k.t||'text'}"${k.t==='number'?' inputmode="decimal"':''} value="${esc(ln[k.id]||'')}" placeholder="${esc(k.ph||'')}" oninput="setcel('${c.id}',${i},'${k.id}',this.value)"></td>`;
+      }).join('')}<td><button type="button" class="delrow" onclick="delrow('${c.id}',${i})">✕</button></td></tr>`).join('')}</tbody></table></div>
+      <div class="rowb"><button type="button" class="btn sm" onclick="addrow('${c.id}')">+ linha</button></div>`;
+  } else if(c.t==='grupo2'){
+    return `<div class="f grid2">${c.campos.map(x=>campo(x)).join('')}</div>`;
+  }
+  return `<div class="f">${lab}${ctrl}${aj}</div>`;
+}
+
+/* ---------- estado ---------- */
+function setv(id,val){ if(val===null||val===''||val===undefined) delete R[id]; else R[id]=val; salvar(); progresso();
+  const c = achar(id); if(c && (c.t==='radio'||c.t==='escala')) render(); }
+function togm(id,op){ const a = Array.isArray(R[id])?R[id].slice():[];
+  const i=a.indexOf(op); if(i>=0) a.splice(i,1); else a.push(op);
+  if(a.length) R[id]=a; else delete R[id]; salvar(); render(); }
+function setcel(id,i,col,val){ const a = Array.isArray(R[id])?R[id]:[{}]; while(a.length<=i) a.push({});
+  if(val==='') delete a[i][col]; else a[i][col]=val; R[id]=a; salvar(); progresso(); }
+function addrow(id){ const a = Array.isArray(R[id])?R[id].slice():[{}]; a.push({}); R[id]=a; salvar(); render(); }
+function delrow(id,i){ const a = Array.isArray(R[id])?R[id].slice():[]; a.splice(i,1); if(a.length) R[id]=a; else delete R[id]; salvar(); render(); }
+function achar(id){ for(const s of SPEC.secoes){ const f=buscar(s.campos,id); if(f) return f; } return null; }
+function buscar(cs,id){ for(const c of cs){ if(c.id===id) return c; if(c.campos){ const f=buscar(c.campos,id); if(f) return f; } } return null; }
+function todos(){ const out=[]; SPEC.secoes.forEach(s=>colher(s.campos,s,out)); return out; }
+function colher(cs,s,out){ cs.forEach(c=>{ if(c.campos) colher(c.campos,s,out); else out.push({c,s}); }); }
+function preenchido(c){ const v=R[c.id];
+  if(v==null||v==='') return false;
+  if(Array.isArray(v)) return v.some(x=>typeof x==='object' ? Object.keys(x).length>0 : true);
+  return true; }
+
+function progresso(){
+  const req = todos().filter(x=>x.c.req);
+  const ok = req.filter(x=>preenchido(x.c)).length;
+  const pct = req.length? ok/req.length*100 : 0;
+  document.getElementById('pi').style.width = pct+'%';
+  document.getElementById('pt').textContent = ok+' de '+req.length+' campos essenciais';
+}
+
+/* ---------- saída ---------- */
+function valorTexto(c){
+  const v=R[c.id];
+  if(v==null||v==='') return null;
+  if(c.t==='tabela'){
+    const ls=(Array.isArray(v)?v:[]).filter(x=>Object.keys(x).length);
+    if(!ls.length) return null;
+    return ls.map(ln=>c.cols.map(k=>ln[k.id]?k.l+': '+ln[k.id]:null).filter(Boolean).join(' · ')).map(s=>'   - '+s).join('\n');
+  }
+  if(Array.isArray(v)) return v.join(', ');
+  return String(v);
+}
+function resumo(){
+  const L=[];
+  L.push('=== '+SPEC.titulo.toUpperCase()+' ===');
+  L.push('Formulário rod-saude · modelo '+SPEC.id+' v'+SPEC.versao);
+  L.push('');
+  SPEC.secoes.forEach((s,i)=>{
+    const linhas=[];
+    const flat=[]; colher(s.campos,s,flat);
+    flat.forEach(({c})=>{ const t=valorTexto(c); if(t!=null) linhas.push(t.includes('\n')? c.l+':\n'+t : c.l+': '+t); });
+    if(linhas.length){ L.push((i+1)+'. '+s.nome.toUpperCase()); linhas.forEach(x=>L.push('  '+x)); L.push(''); }
+  });
+  const faltam = todos().filter(x=>x.c.req && !preenchido(x.c)).map(x=>x.c.l);
+  if(faltam.length){ L.push('CAMPOS ESSENCIAIS AINDA EM BRANCO:'); faltam.forEach(f=>L.push('  - '+f)); L.push(''); }
+  L.push('Ao receber: monte o perfil para o app rod-saude a partir destes dados. Sinalize o que ficou faltando e o que precisa de confirmação médica antes de virar prescrição.');
+  return L.join('\n');
+}
+function pacote(){
+  return JSON.stringify({formulario:SPEC.id, versao:SPEC.versao, titulo:SPEC.titulo, respostas:R}, null, 1);
+}
+function gerar(){
+  const faltam = todos().filter(x=>x.c.req && !preenchido(x.c));
+  abrir(`<h3>Formulário pronto</h3>
+    <div class="sh">${faltam.length? '<b style="color:var(--wa)">'+faltam.length+' campo(s) essencial(is) em branco.</b> Dá para enviar assim mesmo; o que faltar será perguntado depois.' : 'Todos os campos essenciais preenchidos.'}</div>
+    <div class="tabs"><button id="t1" class="on" onclick="aba(1)">Resumo em texto</button><button id="t2" onclick="aba(2)">Pacote de dados</button></div>
+    <textarea id="out" readonly>${esc(resumo())}</textarea>
+    <div class="rowb">
+      <button class="btn p" onclick="copiar(document.getElementById('out').value)">Copiar</button>
+      <button class="btn c" onclick="enviar()">Enviar</button>
+      <button class="btn" onclick="salvarArquivo()">Baixar .json</button>
+      <button class="btn" onclick="fechar()">Fechar</button>
+    </div>
+    <div class="sh" style="margin-top:12px">O <b>resumo em texto</b> serve para colar numa conversa ou num e-mail. O <b>pacote de dados</b> é o formato que o app lê para montar o perfil automaticamente. Na dúvida, envie os dois.</div>`);
+}
+function aba(n){
+  document.getElementById('t1').classList.toggle('on',n===1);
+  document.getElementById('t2').classList.toggle('on',n===2);
+  document.getElementById('out').value = n===1 ? resumo() : pacote();
+}
+async function enviar(){
+  const txt = document.getElementById('out').value;
+  if(navigator.share){ try{ await navigator.share({text:txt, title:SPEC.titulo}); return; }catch(e){ if(e.name==='AbortError') return; } }
+  copiar(txt);
+}
+function salvarArquivo(){
+  const nome = (R.nome||'sem nome').toString().trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9\-]/g,'');
+  const d=new Date(); const dd=String(d.getDate()).padStart(2,'0')+String(d.getMonth()+1).padStart(2,'0')+d.getFullYear();
+  const b = new Blob([pacote()],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b);
+  a.download = nome+' - '+SPEC.id+' - '+dd+'.json'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000); msg('Arquivo gerado');
+}
+function copiar(t){
+  if(navigator.clipboard&&window.isSecureContext) navigator.clipboard.writeText(t).then(()=>msg('Copiado'),()=>fb(t)); else fb(t);
+  function fb(x){ const a=document.createElement('textarea'); a.value=x; a.style.position='fixed'; a.style.opacity='0';
+    document.body.appendChild(a); a.select(); try{document.execCommand('copy'); msg('Copiado');}catch(e){msg('Não foi possível copiar');} a.remove(); }
+}
+function limpar(){
+  if(!confirm('Apagar tudo o que foi preenchido neste formulário?')) return;
+  R={}; localStorage.removeItem(KEY+'_meta'); localStorage.removeItem(KEY+'_resumo'); salvar(); render(); msg('Formulário limpo');
+}
+function abrir(h){ document.getElementById('sheet').innerHTML=h; document.getElementById('mask').classList.add('on'); }
+function fechar(){ document.getElementById('mask').classList.remove('on'); }
+
+render();
+</script>
+</body>
+</html>
