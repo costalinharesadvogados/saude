@@ -31,12 +31,20 @@ input[type=number]{-moz-appearance:textfield}
 ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
 
 header{position:sticky;top:0;z-index:40;background:rgba(11,18,32,.94);backdrop-filter:blur(10px);
-  border-bottom:1px solid var(--line);padding:10px 14px 8px}
+  border-bottom:1px solid var(--line);
+  /* viewport-fit=cover faz o conteúdo subir por baixo da barra de status e da ilha
+     dinâmica no iPhone. O env() devolve esse espaço ao cabeçalho. */
+  padding:calc(10px + env(safe-area-inset-top)) 14px 8px}
 .hrow{display:flex;align-items:center;gap:10px}
 .hrow h1{font-size:16px;letter-spacing:.2px;flex:1}
-.datenav{display:flex;align-items:center;gap:4px}
-.datenav button{padding:4px 9px;border-radius:8px;background:var(--card);font-size:15px;color:var(--tx2)}
-.datenav .d{font-size:13px;font-weight:600;min-width:104px;text-align:center;color:var(--tx)}
+/* A navegação de data desceu para o fim do cabeçalho. No iPhone em modo app, a primeira
+   linha fica embaixo da ilha dinâmica e da barra de status, e o toque não chegava aqui. */
+.datenav{display:flex;align-items:center;gap:8px;margin-top:10px}
+.datenav button{flex:0 0 52px;padding:10px 0;border-radius:10px;background:var(--card);
+  border:1px solid var(--line);font-size:18px;line-height:1;color:var(--tx)}
+.datenav button:active{background:var(--card2)}
+.datenav .d{flex:1;font-size:14px;font-weight:700;text-align:center;color:var(--tx);
+  background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 0}
 .badge{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--card2);color:var(--tx2);white-space:nowrap}
 .badge.fds{background:#3a2a12;color:#fbbf24}
 
@@ -111,6 +119,9 @@ main{padding:12px 14px 20px;max-width:760px;margin:0 auto}
 .pad{padding:11px 13px}
 .muted{color:var(--tx3);font-size:12px;line-height:1.5}
 
+.lsel{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin:0 0 10px}
+.lsel button{background:var(--c2);border:1px solid var(--bd);color:var(--tx2);border-radius:10px;padding:8px 0;font-size:13px;font-weight:700;font-family:inherit}
+.lsel button.on{background:var(--ac);border-color:var(--ac);color:#04121f}
 .tsel{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-bottom:11px}
 .tsel button{padding:11px 0;border-radius:10px;background:var(--card);border:1px solid var(--line);font-weight:700;font-size:12px;color:var(--tx2)}
 .tsel button.on{background:var(--ac);color:#052539;border-color:var(--ac)}
@@ -173,13 +184,13 @@ pre{background:#0a1526;padding:10px;border-radius:9px;font-size:11px;overflow:au
   <div class="hrow">
     <h1 id="ttl">Hoje</h1>
     <span class="badge" id="bdg">—</span>
-    <div class="datenav">
-      <button onclick="mvDia(-1)">‹</button>
-      <span class="d" id="dlbl">—</span>
-      <button onclick="mvDia(1)">›</button>
-    </div>
   </div>
   <div class="metas" id="metas"></div>
+  <div class="datenav">
+    <button onclick="mvDia(-1)" aria-label="dia anterior">‹</button>
+    <span class="d" id="dlbl" onclick="irHoje()">—</span>
+    <button onclick="mvDia(1)" aria-label="dia seguinte">›</button>
+  </div>
 </header>
 
 <main>
@@ -199,10 +210,11 @@ pre{background:#0a1526;padding:10px;border-radius:9px;font-size:11px;overflow:au
 
 <script>
 /* ============================================================
-   rod-saude — registro diário · versão 3 (15082026) · cache sw v8
+   rod-saude — registro diário · versão 5 (15082026) · cache sw v12
    Base: panorama de saúde 25072026 + plano nutricional 28072026 (whey 30 g)
         + RM de coluna 08082026 e comparação direta das imagens 2024/2025/2026
-        + programa de treino ABCDE de 15082026 (Spring / Summer)
+        + programa de treino ABCDE de 15082026, em DUAS versões por letra:
+          uma para o Summer Park e outra para o Spring Park
    Dados apenas neste aparelho (localStorage). Backup em Dados.
    ============================================================ */
 
@@ -313,17 +325,62 @@ const EXTRAS = [
 ];
 
 /* ---------- 3. TREINO: sugestão inicial editável ---------- */
+const LOCAIS = [['summer','Summer','Summer Park — condomínio próprio'],
+               ['spring','Spring','Spring Park — prédio vizinho']];
+/* Programa ABCDE de 15082026, agora em DUAS VERSÕES por letra: uma para cada academia.
+   O que muda entre elas não é capricho: o Spring tem barra olímpica de 20 kg COM suportes
+   de segurança, e é o único lugar onde terra e agachamento livre pesados são seguros sem
+   alguém segurando. O Summer não tem suportes, mas tem Smith, cadeira flexora, esteira,
+   bicicleta e piscina com raia de 25 m. AS DUAS têm barra fixa multipegada — a do Spring
+   fica acima das duas polias —, então o C e o E são iguais nos dois prédios.
+   Detalhe de séries e cargas: "Rodolfo Costa - programa de treino - 15082026.docx". */
 const TREINO_SEED = {
-  /* Programa ABCDE de 15082026 — bloco de 8 semanas, ciclo rolante.
-     Prédio principal de cada sessão entre parênteses no rótulo abaixo.
-     Detalhe de séries, cargas e alternativas: "Rodolfo Costa - programa de treino - 15082026.docx". */
-  A:{corrida:true,  rot:'A — Empurrar (Spring)', ex:['Supino reto com barra','Supino inclinado com halteres','Crossover polia alta','Desenvolvimento com halteres','Tríceps corda na polia','Tríceps francês unilateral']},
-  B:{corrida:false, rot:'B — Quadríceps (Spring)', ex:['Agachamento livre com barra','Leg press 45°','Cadeira extensora','Mesa flexora']},
-  C:{corrida:false, rot:'C — Puxar (Summer)', ex:['Barra fixa pegada pronada','Puxador alto pegada aberta','Remada baixa com triângulo','Pullover na polia alta','Rosca alternada com halteres','Rosca no banco inclinado']},
-  D:{corrida:false, rot:'D — Posterior e ombro (Spring)', ex:['Terra convencional','Stiff com barra','Elevação pélvica com barra','Elevação lateral com halteres','Face pull na polia alta','Rotação externa no crossover']},
-  D2:{corrida:false, rot:'D2 — Posterior e ombro SEM CARGA AXIAL (Spring)', ex:['Mesa flexora','Elevação pélvica com barra','Flexão nórdica assistida','Cadeira abdutora','Elevação lateral com halteres','Face pull na polia alta','Rotação externa no crossover']},
-  E:{corrida:true,  rot:'E — Acessórios (Summer, cardio no Spring)', ex:['Pallof press','Prancha frontal','Prancha lateral','Dead bug','Bird dog','Panturrilha em pé no degrau','Farmer\'s walk com kettlebell','Encolhimento com halteres','Rosca inversa na barra W','Pendura passiva na barra fixa']}
+  A:{
+    summer:{corrida:true, rot:'A — Empurrar (Summer)',
+      ex:['Supino reto no Smith','Supino inclinado com halteres','Crossover polia alta','Desenvolvimento com halteres','Tríceps corda na polia','Tríceps francês unilateral']},
+    spring:{corrida:true, rot:'A — Empurrar (Spring)',
+      ex:['Supino reto com barra','Supino inclinado com halteres','Voador (back and deck)','Desenvolvimento com halteres','Tríceps corda na polia','Tríceps francês unilateral']}
+  },
+  B:{
+    summer:{corrida:false, rot:'B — Quadríceps (Summer)',
+      ex:['Agachamento no Smith','Leg press 45°','Cadeira extensora','Cadeira flexora']},
+    spring:{corrida:false, rot:'B — Quadríceps (Spring)',
+      ex:['Agachamento livre com barra','Leg press 45°','Cadeira extensora','Mesa flexora']}
+  },
+  C:{
+    summer:{corrida:false, rot:'C — Puxar (Summer)',
+      ex:['Barra fixa pegada pronada','Puxador alto pegada aberta','Remada baixa com triângulo','Pullover na polia alta','Rosca alternada com halteres','Rosca no banco inclinado']},
+    spring:{corrida:false, rot:'C — Puxar (Spring)',
+      ex:['Barra fixa pegada pronada','Puxador alto pegada aberta','Remada baixa com triângulo','Pullover na polia alta','Rosca alternada com halteres','Rosca no banco inclinado']}
+  },
+  D:{
+    summer:{corrida:false, rot:'D — Posterior e ombro (Summer, SEM terra)',
+      ex:['Stiff com halteres','Elevação pélvica com barra','Cadeira flexora','Elevação lateral com halteres','Face pull na polia alta','Rotação externa no crossover']},
+    spring:{corrida:false, rot:'D — Posterior e ombro (Spring)',
+      ex:['Terra convencional','Stiff com barra','Elevação pélvica com barra','Elevação lateral com halteres','Face pull na polia alta','Rotação externa no crossover']}
+  },
+  D2:{
+    summer:{corrida:false, rot:'D2 — Posterior e ombro SEM CARGA AXIAL (Summer)',
+      ex:['Cadeira flexora','Elevação pélvica com barra','Flexão nórdica assistida','Cadeira abdutora','Elevação lateral com halteres','Face pull na polia alta','Rotação externa no crossover']},
+    spring:{corrida:false, rot:'D2 — Posterior e ombro SEM CARGA AXIAL (Spring)',
+      ex:['Mesa flexora','Elevação pélvica com barra','Flexão nórdica assistida','Cadeira abdutora','Elevação lateral com halteres','Face pull na polia alta','Rotação externa no crossover']}
+  },
+  E:{
+    summer:{corrida:true, rot:'E — Acessórios (Summer)',
+      ex:['Pallof press','Prancha frontal','Prancha lateral','Dead bug','Bird dog','Panturrilha em pé no degrau','Farmer\'s walk com kettlebell','Encolhimento com halteres','Rosca inversa na barra W','Pendura passiva na barra fixa']},
+    spring:{corrida:true, rot:'E — Acessórios (Spring)',
+      ex:['Pallof press','Prancha frontal','Prancha lateral','Dead bug','Bird dog','Panturrilha em pé no degrau','Farmer\'s walk com kettlebell','Encolhimento com halteres','Rosca inversa na barra W','Pendura passiva na barra fixa']}
+  }
 };
+const LOCAL_PADRAO = 'summer';
+function chaveBib(t,l){ return t+'@'+l; }
+function seedDe(t,l){ return (TREINO_SEED[t] && TREINO_SEED[t][l]) || null; }
+function rotDe(t,l){ const k=chaveBib(t,l); const s=seedDe(t,l);
+  return (S.rot && S.rot[k]) || (s ? s.rot : ''); }
+function corridaDe(t,l){ const s=seedDe(t,l); return !!(s && s.corrida); }
+function localDe(d){ const tr=T(d); if(!tr.local) tr.local = S.cfg.localPadrao || LOCAL_PADRAO; return tr.local; }
+function nomeLocal(l){ const x=LOCAIS.find(z=>z[0]===l); return x?x[1]:l; }
+
 
 /* ---------- 4. HISTÓRICO MÉDICO PADRÃO ---------- */
 const LABS_PADRAO = [
@@ -393,6 +450,27 @@ const PERGUNTAS_PADRAO = [
   'A CPK estava 355 em 2022 — devo repetir e investigar?',
   'Tenho uma RM de ombro esquerdo de 2016 que nunca foi laudada — vale pedir o laudo agora ou repetir o exame?'
 ];
+
+/* ---------- 4b. MEDICAMENTOS E SUPLEMENTOS ---------- */
+/* tipo: 'med' (prescrito) ou 'sup' (suplemento). horas: lista de horários do dia.
+   dias: 'todos' ou lista de números de 0 (domingo) a 6 (sábado).
+   A contagem calórica NÃO passa por aqui: whey e creatina continuam sendo contados
+   no cardápio. Esta lista é de ADESÃO e de horário, não de caloria. */
+const MEDS_PADRAO = [
+  {id:'m_creatina', n:'Creatina monoidratada', dose:'7 g', tipo:'sup', horas:['05:00'], dias:'todos',
+   obs:'Tomada no pré-treino, diluída. Suspender de 2 a 4 semanas antes da coleta de creatinina e cistatina C, se o médico concordar.'},
+  {id:'m_whey', n:'Whey protein', dose:'1,5 scoop de 30 g', tipo:'sup', horas:['06:30','17:00'], dias:'todos',
+   obs:'1,5 scoop na vitamina da manhã e 0,5 no lanche das 17h. Já entra na contagem do cardápio.'},
+  {id:'m_zma', n:'ZMA com boro e tribulus', dose:'conforme o rótulo', tipo:'sup', horas:['22:00'], dias:'todos',
+   obs:'ATENÇÃO: o laudo de testosterona alerta que suplementos com precursores podem interferir no imunoensaio. Avise o laboratório na próxima coleta.'},
+  {id:'m_propolis', n:'Própolis verde', dose:'conforme o rótulo', tipo:'sup', horas:['05:00'], dias:'todos', obs:''},
+  {id:'m_vitd', n:'Vitamina D3', dose:'CONFIRMAR a dose', tipo:'sup', horas:['06:30'], dias:'todos',
+   obs:'Dose ainda não registrada no projeto. Confira o rótulo e corrija aqui. Vitamina D é lipossolúvel: absorve melhor junto de refeição com gordura.'},
+  {id:'m_vitb12', n:'Vitamina B12', dose:'CONFIRMAR a dose', tipo:'sup', horas:['06:30'], dias:'todos',
+   obs:'Dose ainda não registrada no projeto. Confira o rótulo e corrija aqui.'}
+];
+const DIAS_SEM = [['0','D'],['1','S'],['2','T'],['3','Q'],['4','Q'],['5','S'],['6','S']];
+
 /* ---------- registro de dor ---------- */
 const DOR_LOCAIS = ['Lombar','Quadril direito','Quadril esquerdo','Nádega direita','Nádega esquerda',
   'Virilha','Coxa (acima do joelho)','Perna (abaixo do joelho)','Pé','Pescoço',
@@ -430,6 +508,10 @@ const CUIDADOS = [
    t:'Musculatura paravertebral', m:'A RM de 08082026 descreve leve hipotrofia da musculatura paravertebral posterior na transição lombossacra. Bird dog e dead bug são trabalho de extensor lombar em posição NEUTRA: fortalecem essa musculatura sem fechar o forame. Hiperextensão carregada, banco romano e good morning fazem o contrário e estão fora do programa.'},
   {re:/agachamento livre|agachamento com barra|agachamento guiado/i,
    t:'Teto do agachamento neste bloco: 90 kg', m:'90 kg é 75% do 1RM de 120, dentro do teto acordado. Desça até o joelho a 90° ou até onde a pelve NÃO retroverter — o momento em que a lombar arredonda no fundo é o momento em que a carga migra do quadril para a pars de L5.'},
+  {re:/supino reto com barra|agachamento livre com barra|terra convencional|stiff com barra/i,
+   t:'Barra livre pesada: só no Spring', m:'O Summer NÃO tem barras de segurança no suporte, e você treina às 5h, sozinho. Barra livre pesada sem suporte de segurança é o cenário em que um erro vira acidente. No Summer, a versão destes exercícios é no Smith ou com halteres — está tudo na biblioteca da academia certa.'},
+  {re:/nata[çc][ãa]o|piscina|raia|caminhada na [áa]gua/i,
+   t:'Piscina do Summer: o cardio de dia ruim', m:'Raia de 25 m. Na água a carga axial é zero e a flexão leve do nado peito ou da caminhada na raia ABRE o forame, ao contrário da extensão. É a substituição certa para o cardio em dia de coluna sensível, e o único movimento aeróbio que não pede nada da coluna em pé. Nado crawl com respiração unilateral força extensão cervical — se incomodar, use o snorkel ou troque pela caminhada na raia.'},
   {re:/flexão de tronco|máquina de abdominal|abdominal (na )?máquina|abdominal com anilha|crunch|supra ?abdominal/i,
    t:'PROIBIDO: flexão lombar carregada', m:'Flexão de tronco carregada e repetida é o padrão que mais estressa a pars interarticular de L5 — exatamente o local da espondilólise. Não use a máquina de abdominal do Spring. Substitua por Pallof press, prancha, prancha lateral, dead bug, bird dog e farmer\'s walk, que treinam o core resistindo ao movimento em vez de produzi-lo.'}
 ];
@@ -438,7 +520,7 @@ const CUIDADOS = [
 const KEY='rodsaude_v1';
 function base(){
   const b = {
-    v:3,
+    v:4,
     cfg:{peso:91, aguaMeta:3500, kcalSem:3054, kcalFds:3400, protMeta:203, carbMeta:359, gordMeta:99,
          protMin:180, dosesMax:5, diaPeso:1},
     exames:{cistatina:'', coluna:'', lipidico:'2026-11-26', avalFisica:'2026-10-15'},
@@ -448,7 +530,11 @@ function base(){
     perguntas: PERGUNTAS_PADRAO.slice(),
     dias:{}, treinos:{}, bib:{}, medidas:[], atualizacoes:[]
   };
-  for(const k in TREINO_SEED) b.bib[k] = TREINO_SEED[k].ex.slice();
+  b.rot = b.rot || {};
+  for(const t in TREINO_SEED) for(const [l] of LOCAIS){
+    const k = chaveBib(t,l); b.bib[k] = TREINO_SEED[t][l].ex.slice(); b.rot[k] = TREINO_SEED[t][l].rot; }
+  b.cfg.localPadrao = LOCAL_PADRAO;
+  b.meds = JSON.parse(JSON.stringify(MEDS_PADRAO));
   return b;
 }
 let S = carregar();
@@ -473,6 +559,7 @@ function mesclar(b, n){
   o.labs = n.labs && n.labs.length ? n.labs : b.labs;
   o.estrutural = n.estrutural && n.estrutural.length ? n.estrutural : b.estrutural;
   o.perguntas = n.perguntas && n.perguntas.length ? n.perguntas : b.perguntas;
+  o.meds = n.meds && n.meds.length ? n.meds : (b.meds||[]);
   o.atualizacoes = n.atualizacoes || b.atualizacoes || [];
   return o;
 }
@@ -484,19 +571,75 @@ function migrar(o){
      cada treino já registrado guarda sua própria lista de exercícios e cargas. */
   if((o.v||0) < 3){
     o.bib = {};
-    for(const k in TREINO_SEED) o.bib[k] = TREINO_SEED[k].ex.slice();
+    for(const t in TREINO_SEED) for(const [l] of LOCAIS) o.bib[chaveBib(t,l)] = TREINO_SEED[t][l].ex.slice();
     o.atualizacoes = o.atualizacoes || [];
     o.atualizacoes.push({d:'2026-08-15', txt:'Programa ABCDE — biblioteca de exercícios substituída. Histórico preservado.'});
   }
-  /* rede de segurança: qualquer letra que exista na semente e não no aparelho é criada.
-     Idempotente, e não toca nas letras que o usuário já personalizou. */
-  o.bib = o.bib || {};
-  for(const k in TREINO_SEED) if(!Array.isArray(o.bib[k]) || !o.bib[k].length) o.bib[k] = TREINO_SEED[k].ex.slice();
-  o.v = 3; return o;
+  /* v4: cada letra passa a ter DUAS bibliotecas, uma por academia (A@summer, A@spring...).
+     A biblioteca antiga, que era uma só por letra, é substituída pelas duas novas.
+     O HISTÓRICO NÃO É TOCADO: cada treino registrado guarda sua própria lista e cargas. */
+  o.bib = o.bib || {}; o.rot = o.rot || {}; o.notas = o.notas || {};
+  if((o.v||0) < 4){
+    for(const k of Object.keys(o.bib)) if(k.indexOf('@') < 0) delete o.bib[k];
+    o.atualizacoes = (o.atualizacoes||[]).concat([{d:'2026-08-15', txt:'Treino por academia: cada letra passou a ter versão Summer e versão Spring. Histórico preservado.'}]);
+  }
+  for(const t in TREINO_SEED) for(const [l] of LOCAIS){
+    const k = chaveBib(t,l);
+    if(!Array.isArray(o.bib[k]) || !o.bib[k].length) o.bib[k] = TREINO_SEED[t][l].ex.slice();
+    if(!o.rot[k]) o.rot[k] = TREINO_SEED[t][l].rot;
+  }
+  o.cfg = o.cfg || {}; if(!o.cfg.localPadrao) o.cfg.localPadrao = LOCAL_PADRAO;
+  o.meds = Array.isArray(o.meds) ? o.meds : [];
+  o.meds.forEach(m=>{ if(!m.id) m.id = novoMedId(); if(!m.horas) m.horas=['']; if(!m.dias) m.dias='todos'; });
+  o.v = 4; return o;
 }
 function salvar(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){ msg('Falha ao salvar'); } }
 function refeicoes(){ return S.plano.concat([REF_EXTRA]); }
 function D(d){ if(!S.dias[d]) S.dias[d]={plano:{},extras:[],agua:0,obs:''}; return S.dias[d]; }
+/* ---------- medicamentos: leitura, marcação e atraso ---------- */
+function medsDoDia(d){
+  const w = new Date(d+'T12:00').getDay();
+  return (S.meds||[]).filter(m=>{
+    if(m.ativo === false) return false;
+    if(m.inicio && d < m.inicio) return false;
+    if(m.fim && d > m.fim) return false;
+    if(Array.isArray(m.dias) && !m.dias.map(String).includes(String(w))) return false;
+    return true;
+  });
+}
+function dosesDoDia(d){
+  const L=[];
+  medsDoDia(d).forEach(m=>(m.horas||['']).forEach(h=>L.push({m, h, k:m.id+'@'+h})));
+  return L.sort((a,b)=>String(a.h).localeCompare(String(b.h)));
+}
+/* leitura pura: ver um dia não pode criar registro vazio no backup */
+function medsReg(d){ return (D(d).meds) || {}; }
+function medTomado(d,k){ return !!medsReg(d)[k]; }
+function togMed(d,k){
+  const dd=D(d); if(!dd.meds) dd.meds={};
+  if(dd.meds[k]) delete dd.meds[k];
+  else dd.meds[k] = new Date().toTimeString().slice(0,5);
+  if(!Object.keys(dd.meds).length) delete dd.meds;
+  salvar(); render();
+}
+function hParaNum(h){ const m=/^(\d{1,2}):(\d{2})$/.exec(String(h||'')); return m? +m[1]+ +m[2]/60 : null; }
+/* devolve as doses vencidas e não marcadas, com quantas horas de atraso */
+function medsAtrasadas(d){
+  const ehHoje = d===hoje();
+  const agora = ehHoje ? new Date().getHours()+new Date().getMinutes()/60 : 24;
+  return dosesDoDia(d).filter(x=>{
+    if(medTomado(d,x.k)) return false;
+    const hn = hParaNum(x.h); if(hn===null) return false;
+    return agora >= hn + 0.5;
+  }).map(x=>Object.assign({}, x, {atraso: agora - hParaNum(x.h)}));
+}
+function medsResumo(d){
+  const tot = dosesDoDia(d).length;
+  const feitas = dosesDoDia(d).filter(x=>medTomado(d,x.k)).length;
+  return {tot, feitas};
+}
+function novoMedId(){ return 'm_'+Date.now().toString(36)+Math.floor(Math.random()*1e3).toString(36); }
+
 /* Dor() é LEITURA e não grava nada — só assim ver um dia não cria registro vazio no backup.
    Para escrever, use dorRW(), e vazio volta a ser ausência. */
 function Dor(d){ return (D(d).dor) || {n:null, locais:[], sint:[], obs:''}; }
@@ -506,7 +649,7 @@ function podarDor(d){ const dd=D(d); if(dorVazia(dd.dor)) delete dd.dor; }
 function temDor(d){ const x=(D(d)||{}).dor; return !!(x && (x.n!==null && x.n!==undefined || (x.locais||[]).length || (x.sint||[]).length || x.obs)); }
 function alarmesDe(d){ const x=(D(d)||{}).dor; if(!x) return [];
   return (x.sint||[]).filter(s=>DOR_SINTOMAS.some(y=>y.n===s && y.alarme)); }
-function T(d){ if(!S.treinos[d]) S.treinos[d]={tipo:'',ex:[],cardio:{km:'',min:'',pse:''},obs:''}; return S.treinos[d]; }
+function T(d){ if(!S.treinos[d]) S.treinos[d]={tipo:'',ex:[],cardio:{km:'',min:'',pse:''},obs:'',local:(S.cfg&&S.cfg.localPadrao)||LOCAL_PADRAO}; return S.treinos[d]; }
 
 /* ---------- 6. CÁLCULOS ---------- */
 function fds(d){ const w = new Date(d+'T12:00').getDay(); return w===0||w===6; }
@@ -632,6 +775,20 @@ function alertas(d){
   if(!S.exames.cistatina)
     a.push(['crit','🔬','Cistatina C ainda pendente',
       'É a maior prioridade da próxima consulta. Sua TFGe de 75-76 pode ser artefato de massa muscular, treino e creatina — a cistatina C separa efeito de músculo de efeito de rim. Peça junto a relação albumina/creatinina urinária.']);
+  /* ----- doses de medicamento vencidas ----- */
+  const atrasadas = medsAtrasadas(d);
+  if(atrasadas.length){
+    const graves = atrasadas.filter(x=>x.atraso>=4);
+    const lista = atrasadas.map(x=>x.m.n+' ('+x.h+')').join(', ');
+    if(graves.length)
+      a.push(['crit','💊','Dose em atraso de mais de 4 h: '+graves.map(x=>x.m.n).join(', '),
+        'Não dobre a dose para compensar sem falar com quem prescreveu. Marque no app quando tomar, para a série de adesão ficar honesta.']);
+    else
+      a.push(['warn','💊','Dose pendente: '+lista,
+        'Marque no cartão de medicamentos assim que tomar.']);
+  }
+  else if(dosesDoDia(d).length && medsResumo(d).feitas===dosesDoDia(d).length)
+    a.push(['good','💊','Todas as doses do dia marcadas','']);
   ['lipidico','avalFisica'].forEach(k=>{
     const dta = S.exames[k]; if(!dta) return;
     const dias = difDias(d, dta);
@@ -706,6 +863,40 @@ function renderHoje(){
         <div class="muted" style="margin-top:9px">Anotar todo dia transforma "as dores aumentaram" numa curva que o especialista lê em segundos, e mostra se algum treino específico piora.</div>
       </div>
     </div></div>`;
+
+
+  /* ----- medicamentos e suplementos do dia ----- */
+  const dz = dosesDoDia(dia);
+  if(dz.length){
+    const ab = abertos.has('meds'), rs = medsResumo(dia), atr = medsAtrasadas(dia);
+    h += `<div class="card"${atr.some(x=>x.atraso>=4)?' style="border-color:#5c2429"':''}>
+      <div class="chead ${ab?'open':''}" onclick="toggleCard('meds')">
+        <span class="hora">💊</span>
+        <span class="nm">Medicamentos e suplementos</span>
+        <span class="kc">${rs.feitas}/${rs.tot} tomados${atr.length?' · <b style="color:var(--wa)">'+atr.length+' em atraso</b>':''}</span>
+        <span class="cv">▸</span></div>
+      <div class="cbody ${ab?'open':''}">
+        <div style="padding-top:8px">
+        ${dz.map(x=>{
+          const t = medTomado(dia,x.k), hora = medsReg(dia)[x.k];
+          const late = !t && atr.some(y=>y.k===x.k);
+          return `<div class="kv" style="align-items:flex-start">
+            <span class="k" style="flex:1">
+              <button class="btn ${t?'g':(late?'d':'')} sm" style="min-width:46px" onclick="togMed(dia,'${x.k}')">${t?'✓':'○'}</button>
+              <b style="margin-left:8px;color:var(--tx)">${esc(x.m.n)}</b>
+              <em style="display:block;font-size:11px;color:var(--tx3);margin-left:54px">${esc(x.m.dose||'')}${x.m.tipo==='med'?' · medicamento':' · suplemento'}</em>
+              ${x.m.obs?`<em style="display:block;font-size:11px;color:var(--tx3);margin-left:54px;margin-top:2px">${esc(x.m.obs)}</em>`:''}
+            </span>
+            <span class="v ${t?'gd':(late?'hi':'')}" style="white-space:nowrap">${esc(x.h||'—')}${t&&hora?'<em>às '+esc(hora)+'</em>':''}</span>
+          </div>`;
+        }).join('')}
+        <div class="rowb" style="margin-top:10px">
+          <button class="btn p sm" onclick="marcarTodosMeds()">Marcar todos de hoje</button>
+          <button class="btn sm" onclick="irPara('saude')">Editar a lista</button></div>
+        <div class="muted" style="margin-top:8px">O alerta aparece meia hora depois do horário. Para dose que não pode falhar, deixe também um alarme no relógio do celular: um app instalado pela tela de início não tem garantia de notificação com o aparelho bloqueado.</div>
+        </div>
+      </div></div>`;
+  }
 
   refeicoes().forEach(r=>{
     const ex = extrasDe(dia, r.id);
@@ -839,8 +1030,13 @@ function renderTreino(){
   let h = `<div class="tsel">${tipos.map(([v,lb])=>
     `<button class="${tr.tipo===v?'on':''} ${v==='off'?'rest':''}" onclick="setTipo('${v}')">${lb}</button>`).join('')}</div>`;
 
+  if(tr.tipo && tr.tipo!=='off' && tr.tipo!=='run'){
+    const lc = localDe(dia);
+    h += `<div class="lsel">${LOCAIS.map(([v,n,t])=>
+      `<button class="${lc===v?'on':''}" title="${t}" onclick="setLocal('${v}')">${n}</button>`).join('')}</div>`;
+  }
   if(!tr.tipo){
-    h += `<div class="card"><div class="pad muted">Escolha o treino do dia acima. A carga da última vez aparece sozinha em cada exercício, para você só superar o número.</div></div>`;
+    h += `<div class="card"><div class="pad muted">Escolha o treino do dia acima. Depois escolha a academia: o mesmo treino tem uma versão para cada uma. A carga da última vez aparece sozinha em cada exercício, para você só superar o número.</div></div>`;
     document.getElementById('t-treino').innerHTML = h; return;
   }
   if(tr.tipo==='off'){
@@ -853,8 +1049,8 @@ function renderTreino(){
   if(tr.tipo==='D'){
     h += `<div class="alert a-warn"><span class="ic">🔀</span><div><b>Existe a versão D2, sem carga axial</b>A RM de 08082026 descreve estenose foraminal acentuada em L5-S1 com compressão das raízes emergentes, maior à esquerda. Se hoje a coluna estiver sensível, ou se o especialista tiver restringido carga axial, troque para o botão D2.</div></div>`;
   }
-  if(TREINO_SEED[tr.tipo] && TREINO_SEED[tr.tipo].rot){
-    h += `<div class="card"><div class="pad"><b>${esc(TREINO_SEED[tr.tipo].rot)}</b>
+  if(rotDe(tr.tipo, localDe(dia))){
+    h += `<div class="card"><div class="pad"><b>${esc(rotDe(tr.tipo, localDe(dia)))}</b>
       <div class="muted" style="margin-top:4px">Antes de tudo: 15 min de mobilidade. Aquecimento de no máximo 2 séries por exercício principal, e nunca acima de 40% da tonelagem de trabalho.</div></div></div>`;
   }
   if(tr.tipo!=='run'){
@@ -881,11 +1077,11 @@ function renderTreino(){
       </div>`;
     }).join('');
 
-    h += `<div class="rowb"><button class="btn p sm" onclick="sheetEx()">+ Exercício</button>
+    h += `<div class="rowb"><button class="btn p sm" onclick="sheetEx()">+ Exercício de qualquer treino</button>
           <button class="btn sm" onclick="carregarBib()">Carregar treino ${tr.tipo}</button>
           <button class="btn sm" onclick="salvarBib()">Salvar como treino ${tr.tipo}</button></div>`;
   }
-  if(tr.tipo==='run' || (TREINO_SEED[tr.tipo]&&TREINO_SEED[tr.tipo].corrida)){
+  if(tr.tipo==='run' || corridaDe(tr.tipo, localDe(dia))){
     h += `<div class="card"><div class="pad">
       <div class="sec" style="margin-top:0">Cardio</div>
       <div class="fgrid">
@@ -893,7 +1089,9 @@ function renderTreino(){
         <div><label>Tempo (min)</label><input type="number" inputmode="numeric" value="${tr.cardio.min||''}" placeholder="20" onchange="setCardio('min',this.value)"></div>
         <div class="f1"><label>Percepção de esforço (1 a 10)</label><input type="number" inputmode="numeric" min="1" max="10" value="${tr.cardio.pse||''}" onchange="setCardio('pse',this.value)"></div>
       </div>
-      <div class="muted">Programa de 15082026: cardio nos dias <b>A</b> (20 a 25 min de esteira em inclinação de 6 a 8%, ou elíptico) e <b>E</b> (25 a 30 min de elíptico, que é o de menor impacto axial dos cinco aparelhos do Spring). O Summer não tem cardio. Não aumente a comida por causa disso: o déficit já foi calculado sobre a média da semana.</div>
+      <div class="muted">Programa de 15082026: cardio nos dias <b>A</b> (20 a 25 min) e <b>E</b> (25 a 30 min). <b>Spring</b>: cinco aparelhos, e o elíptico é o de menor impacto axial. <b>Summer</b>: esteira e bicicleta — a bicicleta é a de menor carga sobre a coluna das duas, porque o tronco fica apoiado e não há impacto.
+      <br><br><b>Substituição em dia de coluna sensível:</b> 20 a 30 min na piscina do Summer (raia de 25 m). Na água não há carga axial nenhuma, e a flexão leve do nado peito ou da caminhada na raia é a posição que ABRE o forame, ao contrário da extensão. É o único cardio que você pode fazer num dia em que a lombar não aceita ficar em pé.
+      <br><br>Não aumente a comida por causa do cardio: o déficit já foi calculado sobre a média da semana.</div>
     </div></div>`;
   }
   h += obsTreino(tr) + resumoSemanaTreino();
@@ -924,10 +1122,25 @@ function setTipo(t){
   salvar(); render();
 }
 function carregarBib(sil){
-  const tr=T(dia); (S.bib[tr.tipo]||[]).forEach(n=>{ if(!tr.ex.some(e=>e.nome===n)) tr.ex.push({nome:n, series:[serieVazia(n)]}); });
-  salvar(); if(!sil){ msg('Treino '+tr.tipo+' carregado'); render(); }
+  const tr=T(dia), k=chaveBib(tr.tipo, localDe(dia));
+  (S.bib[k]||[]).forEach(n=>{ if(!tr.ex.some(e=>e.nome===n)) tr.ex.push({nome:n, series:[serieVazia(n)]}); });
+  salvar(); if(!sil){ msg('Treino '+tr.tipo+' do '+nomeLocal(localDe(dia))+' carregado'); render(); }
 }
-function salvarBib(){ const tr=T(dia); S.bib[tr.tipo]=tr.ex.map(e=>e.nome); salvar(); msg('Salvo como treino '+tr.tipo); }
+function salvarBib(){ const tr=T(dia), k=chaveBib(tr.tipo, localDe(dia));
+  S.bib[k]=tr.ex.map(e=>e.nome); salvar(); msg('Salvo como '+tr.tipo+' do '+nomeLocal(localDe(dia))); }
+/* Trocar de academia recarrega a lista de exercícios. Se já houver série preenchida,
+   pergunta antes: o registro do dia vale mais que a comodidade de trocar. */
+function setLocal(l){
+  const tr=T(dia); if(tr.local===l) return;
+  const temDado = (tr.ex||[]).some(e=>(e.series||[]).some(x=>x.carga||x.reps));
+  if(temDado && !confirm('Já há série preenchida neste dia. Trocar para o '+nomeLocal(l)+' vai carregar os exercícios da outra academia. As séries já anotadas permanecem. Continuar?')) return;
+  tr.local = l;
+  if(tr.tipo && tr.tipo!=='off' && tr.tipo!=='run'){
+    if(!temDado) tr.ex = [];
+    carregarBib(true);
+  }
+  salvar(); render(); msg('Academia: '+nomeLocal(l));
+}
 function serieVazia(nome){ const a=ultimaCarga(nome,dia); return a? {reps:a.reps,carga:a.carga,rpe:''} : {reps:'',carga:'',rpe:''}; }
 function ultimaCarga(nome, ate){
   const ds = Object.keys(S.treinos).filter(d=>d<ate).sort().reverse();
@@ -1072,6 +1285,26 @@ function renderSaude(){
     <div class="muted">Preparo da coleta, a discutir com o médico: suspender a creatina por 2 a 4 semanas, evitar treino intenso nas 24 a 48 h anteriores, estar bem hidratado e evitar carga proteica na véspera. Sem isso, o exame mede o treino e não o rim.</div>
   </div></div>`;
 
+
+  h += `<div class="card"><div class="pad">
+    <div class="sec" style="margin-top:0">Medicamentos e suplementos</div>
+    <div class="muted" style="margin-bottom:10px">Esta lista alimenta o cartão de doses da aba Hoje e os alertas de atraso. A contagem de caloria continua sendo a do cardápio: whey e creatina não são contados duas vezes.</div>
+    ${(S.meds||[]).length ? (S.meds||[]).map((m,i)=>`<div class="kv" style="align-items:flex-start">
+        <span class="k" style="flex:1">
+          <b style="color:${m.ativo===false?'var(--tx3)':'var(--tx)'}">${esc(m.n)}</b>
+          <em style="display:block;font-size:11px;color:var(--tx3)">${esc(m.dose||'sem dose informada')} · ${m.tipo==='med'?'medicamento':'suplemento'} · ${(m.horas||[]).join(', ')||'sem horário'} · ${Array.isArray(m.dias)?'dias '+m.dias.map(x=>DIAS_SEM[+x]?DIAS_SEM[+x][1]:x).join(''):'todos os dias'}${m.ativo===false?' · PAUSADO':''}</em>
+        </span>
+        <span class="v" style="white-space:nowrap">
+          <button class="btn sm" onclick="sheetMed(${i})">editar</button>
+          <button class="btn sm" onclick="pausarMed(${i})">${m.ativo===false?'retomar':'pausar'}</button>
+        </span></div>`).join('') : '<div class="muted">Nenhum item cadastrado.</div>'}
+    <div class="rowb" style="margin-top:10px">
+      <button class="btn p sm" onclick="sheetMed(-1)">+ Adicionar</button>
+      <button class="btn sm" onclick="pedirNotificacao()">Ativar notificação</button>
+      <button class="btn sm" onclick="baixarIcs()">Gerar alarme no calendário (.ics)</button></div>
+    <div class="muted" style="margin-top:8px">Estado da notificação: <b id="notif_st">${(typeof Notification==='undefined')?'não suportada neste navegador':Notification.permission}</b>. Mesmo autorizada, com o app fechado o iPhone não garante a entrega — o alarme do relógio, ou o do calendário pelo botão acima, é o que não falha.</div>
+  </div></div>`;
+
   h += `<div class="card"><div class="pad">
     <div class="sec" style="margin-top:0">Rotina de arquivamento de exames</div>
     <div class="muted">De todo exame de imagem, guarde SEMPRE o pacote de imagens (o ZIP/DICOM do portal do laboratório), não apenas o PDF do laudo. O laudo é a leitura de um radiologista num dia; a imagem permite a comparação direta entre datas. Foi exatamente a comparação das imagens de 2024, 2025 e 2026 que mostrou que a estenose foraminal de L5-S1 já existia antes de ser descrita, e que derrubou a leitura de que o edema do nódulo de Schmorl de L1 teria regredido. <b>Conclusão de evolução vem da imagem, nunca da diferença de redação entre laudos.</b></div>
@@ -1108,6 +1341,140 @@ function renderSaude(){
   document.getElementById('t-saude').innerHTML = h;
 }
 function setExame(k,v){ S.exames[k]=v; salvar(); render(); }
+
+
+/* ---------- 12b. MEDICAMENTOS: cadastro, notificação e calendário ---------- */
+function sheetMed(i){
+  const m = i>=0 ? S.meds[i] : {id:novoMedId(), n:'', dose:'', tipo:'med', horas:[''], dias:'todos', obs:''};
+  const semana = Array.isArray(m.dias) ? m.dias.map(String) : null;
+  abrir(`<h3>${i>=0?'Editar':'Novo'} item</h3>
+    <div class="fgrid">
+      <div class="f1"><label>Nome</label><input id="md_n" value="${esc(m.n)}" placeholder="ex.: Rosuvastatina"></div>
+      <div><label>Dose</label><input id="md_d" value="${esc(m.dose||'')}" placeholder="ex.: 10 mg"></div>
+      <div><label>Tipo</label><select id="md_t">
+        <option value="med" ${m.tipo!=='sup'?'selected':''}>Medicamento</option>
+        <option value="sup" ${m.tipo==='sup'?'selected':''}>Suplemento</option></select></div>
+      <div class="f1"><label>Horários, separados por vírgula</label>
+        <input id="md_h" value="${esc((m.horas||[]).join(', '))}" placeholder="ex.: 07:00, 19:30"></div>
+      <div><label>Início (opcional)</label><input type="date" id="md_i" value="${m.inicio||''}"></div>
+      <div><label>Fim (opcional)</label><input type="date" id="md_f" value="${m.fim||''}"></div>
+      <div class="f1"><label>Observação</label><textarea id="md_o" rows="2" placeholder="jejum, junto da refeição, cuidado com interação…">${esc(m.obs||'')}</textarea></div>
+    </div>
+    <div class="sec" style="margin-top:4px">Dias da semana</div>
+    <div class="chip2" id="md_dias">
+      <button class="${!semana?'on':''}" onclick="marcarDiaMed('todos')">todos</button>
+      ${DIAS_SEM.map(([v,lb])=>`<button data-d="${v}" class="${semana&&semana.includes(v)?'on':''}" onclick="marcarDiaMed('${v}')">${lb}</button>`).join('')}
+    </div>
+    <div class="rowb" style="margin-top:12px">
+      <button class="btn p" onclick="salvarMed(${i})">Salvar</button>
+      ${i>=0?`<button class="btn d" onclick="apagarMed(${i})">Apagar</button>`:''}
+      <button class="btn" onclick="fechar()">Cancelar</button></div>`);
+}
+function marcarDiaMed(v){
+  const box=document.getElementById('md_dias'); if(!box) return;
+  const bts=[...box.querySelectorAll('button')];
+  if(v==='todos'){ bts.forEach(b=>b.classList.toggle('on', !b.dataset.d)); return; }
+  bts[0].classList.remove('on');
+  const b=bts.find(x=>x.dataset.d===v); if(b) b.classList.toggle('on');
+  if(!bts.some(x=>x.dataset.d && x.classList.contains('on'))) bts[0].classList.add('on');
+}
+function salvarMed(i){
+  const g=id=>(document.getElementById(id)||{}).value||'';
+  const n=g('md_n').trim(); if(!n){ msg('Dê um nome ao item'); return; }
+  const horas=g('md_h').split(',').map(x=>x.trim()).filter(Boolean)
+    .map(x=>{ const m=/^(\d{1,2})\D?(\d{2})?$/.exec(x); if(!m) return x;
+      return String(m[1]).padStart(2,'0')+':'+(m[2]||'00'); });
+  const box=document.getElementById('md_dias');
+  const bts=box?[...box.querySelectorAll('button')]:[];
+  const todos = !bts.length || bts[0].classList.contains('on');
+  const dias = todos ? 'todos' : bts.filter(b=>b.dataset.d && b.classList.contains('on')).map(b=>b.dataset.d);
+  const item = {id: i>=0 ? S.meds[i].id : novoMedId(), n, dose:g('md_d').trim(),
+    tipo:g('md_t')==='sup'?'sup':'med', horas: horas.length?horas:[''], dias,
+    inicio:g('md_i'), fim:g('md_f'), obs:g('md_o').trim(),
+    ativo: i>=0 ? (S.meds[i].ativo!==false) : true};
+  S.meds = S.meds || [];
+  if(i>=0) S.meds[i]=item; else S.meds.push(item);
+  salvar(); fechar(); render(); msg(n+' salvo');
+}
+function pausarMed(i){
+  const m=S.meds[i]; if(!m) return;
+  m.ativo = (m.ativo===false); salvar(); render();
+  msg(m.n+(m.ativo===false?' pausado':' retomado'));
+}
+function apagarMed(i){
+  const m=S.meds[i]; if(!m) return;
+  if(!confirm('Apagar "'+m.n+'" da lista? O histórico de doses já marcadas não é apagado.')) return;
+  S.meds.splice(i,1); salvar(); fechar(); render(); msg('Item apagado');
+}
+function marcarTodosMeds(){
+  const dd=D(dia); dd.meds = dd.meds || {};
+  const agora = new Date().toTimeString().slice(0,5);
+  dosesDoDia(dia).forEach(x=>{ if(!dd.meds[x.k]) dd.meds[x.k]=agora; });
+  salvar(); render(); msg('Doses do dia marcadas');
+}
+
+/* ---- notificação do sistema: só funciona com o app aberto ou em segundo plano ---- */
+let _medAvisadas = {};
+function pedirNotificacao(){
+  if(typeof Notification==='undefined'){ msg('Este navegador não suporta notificação'); return; }
+  Notification.requestPermission().then(p=>{
+    const el=document.getElementById('notif_st'); if(el) el.textContent=p;
+    msg(p==='granted' ? 'Notificação autorizada' : 'Notificação não autorizada');
+    if(p==='granted'){ S.cfg.notifMeds = true; salvar(); }
+  }).catch(()=>msg('Não foi possível pedir a permissão'));
+}
+function notificarDose(x){
+  if(typeof Notification==='undefined' || Notification.permission!=='granted') return;
+  const corpo = (x.m.dose? x.m.dose+' · ' : '')+'horário '+x.h;
+  try{
+    if(navigator.serviceWorker && navigator.serviceWorker.ready)
+      navigator.serviceWorker.ready.then(r=>r.showNotification('💊 '+x.m.n, {body:corpo, tag:x.k, badge:'./icon-192.png', icon:'./icon-192.png'}))
+        .catch(()=>{ new Notification('💊 '+x.m.n, {body:corpo, tag:x.k}); });
+    else new Notification('💊 '+x.m.n, {body:corpo, tag:x.k});
+  }catch(e){}
+}
+function checarDoses(){
+  const d = hoje();
+  if(dia !== d) { /* olhando outro dia: o relógio segue valendo para hoje */ }
+  medsAtrasadas(d).forEach(x=>{
+    const chave = d+'|'+x.k;
+    if(_medAvisadas[chave]) return;
+    _medAvisadas[chave] = 1;
+    notificarDose(x);
+  });
+  if(dia===d && aba==='hoje') render();
+}
+setInterval(checarDoses, 60000);
+
+/* ---- alarme de verdade: arquivo .ics que o celular importa no calendário ---- */
+function baixarIcs(){
+  const meds = (S.meds||[]).filter(m=>m.ativo!==false && (m.horas||[]).some(h=>hParaNum(h)!==null));
+  if(!meds.length){ msg('Nenhum item com horário para exportar'); return; }
+  const z=n=>String(n).padStart(2,'0');
+  const hj=new Date(), base=hj.getFullYear()+z(hj.getMonth()+1)+z(hj.getDate());
+  const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//rod-saude//meds//PT-BR','CALSCALE:GREGORIAN'];
+  meds.forEach(m=>(m.horas||[]).forEach(h=>{
+    if(hParaNum(h)===null) return;
+    const hh=h.replace(':','')+'00';
+    const rr = Array.isArray(m.dias)
+      ? 'RRULE:FREQ=WEEKLY;BYDAY='+m.dias.map(x=>['SU','MO','TU','WE','TH','FR','SA'][+x]).join(',')
+      : 'RRULE:FREQ=DAILY';
+    L.push('BEGIN:VEVENT',
+      'UID:'+m.id+'-'+hh+'@rod-saude',
+      'DTSTAMP:'+base+'T000000',
+      'DTSTART:'+base+'T'+hh,
+      'DURATION:PT10M',
+      rr,
+      'SUMMARY:💊 '+m.n+(m.dose?' — '+m.dose:''),
+      m.obs?('DESCRIPTION:'+String(m.obs).replace(/\n/g,' ')):'DESCRIPTION:Registro no app rod-saude',
+      'BEGIN:VALARM','TRIGGER:PT0M','ACTION:DISPLAY','DESCRIPTION:'+m.n,'END:VALARM',
+      'END:VEVENT');
+  }));
+  L.push('END:VCALENDAR');
+  const blob=new Blob([L.join('\r\n')],{type:'text/calendar;charset=utf-8'});
+  baixarArq(blob, 'medicamentos - alarmes - '+ddmmaaaa(hoje())+'.ics');
+  msg('Arquivo gerado. Abra-o para o celular criar os alarmes.');
+}
 
 /* ---------- 13. DADOS ---------- */
 function renderDados(){
@@ -1163,6 +1530,11 @@ function renderDados(){
   </div></div>`;
   document.getElementById('t-dados').innerHTML = h;
 }
+function baixarArq(blob, nome){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=nome; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
 function exportar(){
   const blob = blobBackup();
   const a=document.createElement('a');
@@ -1195,6 +1567,13 @@ function apagarTudo(){
 }
 
 /* ---------- 14. RESUMOS PARA O CLAUDE ---------- */
+function linhaMeds(d){
+  const dz=dosesDoDia(d); if(!dz.length) return '';
+  const r=medsResumo(d), atr=medsAtrasadas(d);
+  return 'Medicamentos: '+r.feitas+'/'+r.tot+' doses marcadas'
+    + (atr.length? '. Em atraso: '+atr.map(x=>x.m.n+' ('+x.h+')').join(', ') : '')
+    + '. Em uso: '+medsDoDia(d).map(m=>m.n+(m.dose?' '+m.dose:'')).join('; ')+'.';
+}
 function historicoDor(dias){
   const N = dias||60, hj = new Date(dia+'T12:00'), L=[];
   L.push('HISTÓRICO DE DOR — últimos '+N+' dias, até '+ddmmaaaa(dia));
@@ -1236,8 +1615,9 @@ function resumoDia(d){
   });
   const naoFeitas = S.plano.filter(r=>!refeicaoFeita(d,r)).map(r=>r.nome);
   if(naoFeitas.length) L.push('Não registrado: '+naoFeitas.join(', '));
+  const lm = linhaMeds(d); if(lm) L.push(lm);
   if(tr&&tr.tipo){
-    let l='Treino: '+(tr.tipo==='off'?'descanso':(tr.tipo==='run'?'corrida':tr.tipo));
+    let l='Treino: '+(tr.tipo==='off'?'descanso':(tr.tipo==='run'?'corrida':tr.tipo+(tr.local?' ('+nomeLocal(tr.local)+')':'')));
     (tr.ex||[]).forEach(e=>{ const s=e.series.filter(x=>x.carga||x.reps); if(s.length) l+=`\n  ${e.nome}: `+s.map(x=>`${x.reps||'?'}x${x.carga||'?'}kg${x.rpe?' RPE'+x.rpe:''}`).join(', '); });
     if(tr.cardio&&tr.cardio.km) l+=`\n  corrida ${tr.cardio.km} km em ${tr.cardio.min||'?'} min`;
     if(tr.obs) l+=`\n  nota: ${tr.obs}`;
@@ -1310,7 +1690,7 @@ function sheetClaude(){
 }
 function promptBase(tipo, pergunta){
   const cab = `Sou o Rodolfo. Estes dados vêm do meu app rod-saude. Meu plano: ${S.cfg.kcalSem} kcal de segunda a sexta e ${S.cfg.kcalFds} no fim de semana, proteína alvo ${S.cfg.protMeta} g, teto de ${S.cfg.dosesMax} doses de álcool por dia de fim de semana. Objetivo: perder gordura preservando massa magra. Colesterol/LDL no limite há anos e função renal a esclarecer com cistatina C.`;
-  const rodape = `\n\nSe você for lançar alimentos no meu app, responda com uma linha por alimento, dentro de um bloco de código, exatamente neste formato:\n${FORMATO}\nRefeições: r1 pré-treino, r2 vitamina, r3 complemento, r4 lanche 10h, r5 almoço, r6 lanche 17h, r7 jantar, r8 extras.\nSe for atualizar o plano, os exames ou os exercícios, responda com um bloco de código JSON com as chaves que mudaram (plano, labs, estrutural, perguntas, cfg, exames, bib).`;
+  const rodape = `\n\nSe você for lançar alimentos no meu app, responda com uma linha por alimento, dentro de um bloco de código, exatamente neste formato:\n${FORMATO}\nRefeições: r1 pré-treino, r2 vitamina, r3 complemento, r4 lanche 10h, r5 almoço, r6 lanche 17h, r7 jantar, r8 extras.\nSe for atualizar o plano, os exames, os medicamentos ou os exercícios, responda com um bloco de código JSON com as chaves que mudaram (plano, labs, estrutural, perguntas, meds, prazos, cfg, bib).`;
   const q = pergunta ? `\n\nMinha pergunta: ${pergunta}` : '';
   if(tipo==='dor')     return cab+`\n\n`+historicoDor()+q+
     `\n\nMe ajude a ler esta curva: a dor está subindo, estável ou caindo? Há relação com os treinos registrados? O que vale levar ao especialista em coluna?`;
@@ -1371,6 +1751,7 @@ function aplicarJSON(txt){
   if(Array.isArray(o.perguntas) && o.perguntas.length){ S.perguntas=o.perguntas; mudou++; }
   if(o.cfg && typeof o.cfg==='object'){ Object.assign(S.cfg, o.cfg); mudou++; }
   if(o.exames && typeof o.exames==='object'){ Object.assign(S.exames, o.exames); mudou++; }
+  if(Array.isArray(o.meds) && o.meds.length){ S.meds=o.meds; mudou++; }
   if(o.bib && typeof o.bib==='object'){ Object.assign(S.bib, o.bib); mudou++; }
   if(mudou){ S.atualizacoes = S.atualizacoes||[]; S.atualizacoes.push({d:hoje(), chaves:Object.keys(o)}); }
   return mudou;
@@ -1468,18 +1849,74 @@ function addExtraMao(rid){
   D(dia).extras.push({n, kcal:g('e_k'), p:g('e_p'), c:g('e_c'), g:g('e_g'), q:1, ref:rid});
   abertos.add(rid); salvar(); fechar(); render();
 }
+/* Escolher exercício de QUALQUER treino, de qualquer academia.
+   A lista vem agrupada por treino e prédio, com busca, e o que já está no dia aparece marcado. */
 function sheetEx(){
-  const tr=T(dia); const sug=[...new Set([].concat(...Object.values(S.bib)))].filter(n=>!tr.ex.some(e=>e.nome===n));
   abrir(`<h3>Adicionar exercício</h3>
-    ${sug.length?`<div class="chips">${sug.map(n=>`<button class="chip" onclick="addEx(${JSON.stringify(n).replace(/"/g,'&quot;')})">${esc(n)}</button>`).join('')}</div>`:''}
-    <div class="fgrid"><div class="f1"><label>Novo exercício</label><input id="x_n" placeholder="ex.: remada cavalinho"></div></div>
+    <div class="sub">Pode pegar exercício de qualquer treino e de qualquer academia. O histórico de carga acompanha o NOME, então o "última vez" continua valendo mesmo mudando de letra.</div>
+    <div class="fgrid"><div class="f1"><label>Buscar</label>
+      <input id="x_busca" placeholder="ex.: remada, agachamento, prancha" oninput="pintarEx()"></div></div>
+    <div id="x_lista"></div>
+    <div class="sec">Ou crie um exercício novo</div>
+    <div class="fgrid"><div class="f1"><label>Nome</label><input id="x_n" placeholder="ex.: remada cavalinho"></div></div>
     <div class="rowb"><button class="btn p" onclick="addEx(document.getElementById('x_n').value)">Adicionar</button>
-    <button class="btn" onclick="fechar()">Cancelar</button></div>`);
+    <button class="btn" onclick="fechar()">Fechar</button></div>`);
+  pintarEx();
 }
-function addEx(nome){
+function grupoEx(){
+  /* Ordem estável: cada letra, e dentro dela cada academia. Depois, o que existe no
+     aparelho e não está em nenhuma biblioteca da semente (exercício criado por você). */
+  const gs=[], vistos=new Set();
+  for(const t in TREINO_SEED) for(const [l,nm] of LOCAIS){
+    const k=chaveBib(t,l), lista=(S.bib[k]||[]);
+    if(!lista.length) continue;
+    lista.forEach(n=>vistos.add(n));
+    gs.push({k, rot:(rotDe(t,l)||t+' — '+nm), ex:lista.slice()});
+  }
+  const soltos=[];
+  Object.keys(S.treinos||{}).forEach(d=>((S.treinos[d].ex)||[]).forEach(e=>{
+    if(!vistos.has(e.nome) && !soltos.includes(e.nome)) soltos.push(e.nome); }));
+  if(soltos.length) gs.push({k:'__hist', rot:'Já usados por você, fora das bibliotecas', ex:soltos.sort()});
+  return gs;
+}
+function pintarEx(){
+  const el=document.getElementById('x_lista'); if(!el) return;
+  const f=na((document.getElementById('x_busca')||{}).value||'');
+  const tr=T(dia), jaTem=n=>tr.ex.some(e=>e.nome===n);
+  let h='', achou=0;
+  grupoEx().forEach(g=>{
+    const ex=g.ex.filter(n=>!f || na(n).includes(f));
+    if(!ex.length) return;
+    achou+=ex.length;
+    const faltam=ex.filter(n=>!jaTem(n));
+    h+=`<div class="sec" style="display:flex;align-items:center;gap:8px">
+        <span style="flex:1">${esc(g.rot)}</span>
+        ${faltam.length>1?`<button class="btn sm" onclick="addVarios(${JSON.stringify(faltam).replace(/"/g,'&quot;')})">+ todos (${faltam.length})</button>`:''}
+      </div>
+      <div class="chips">${ex.map(n=>{
+        const t=jaTem(n);
+        return `<button class="chip ${t?'al':''}" ${t?'disabled style="opacity:.45"':''}
+          onclick="addEx(${JSON.stringify(n).replace(/"/g,'&quot;')},1)">${t?'✓ ':''}${esc(n)}</button>`;
+      }).join('')}</div>`;
+  });
+  el.innerHTML = achou ? h : '<div class="muted" style="padding:6px 0">Nada com esse nome. Use o campo abaixo para criar.</div>';
+}
+function na(s){ return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(); }
+function addVarios(nomes){
+  const tr=T(dia); let n=0;
+  (nomes||[]).forEach(x=>{ if(!tr.ex.some(e=>e.nome===x)){ tr.ex.push({nome:x, series:[serieVazia(x)]}); n++; } });
+  salvar(); pintarEx(); render(); msg(n+' exercício(s) adicionado(s)');
+}
+/* manter=1 deixa a folha aberta, para escolher vários seguidos sem reabrir */
+function addEx(nome, manter){
   nome=(nome||'').trim(); if(!nome){ msg('Informe o nome'); return; }
-  T(dia).ex.push({nome, series:[serieVazia(nome)]}); salvar(); fechar(); render();
+  const tr=T(dia);
+  if(tr.ex.some(e=>e.nome===nome)){ msg('Já está no treino de hoje'); return; }
+  tr.ex.push({nome, series:[serieVazia(nome)]}); salvar();
+  if(manter){ pintarEx(); const c=document.getElementById('x_n'); if(c) c.value=''; render(); msg(nome+' adicionado'); }
+  else { fechar(); render(); }
 }
+function irHoje(){ if(dia===hoje()) return; dia=hoje(); render(); window.scrollTo(0,0); msg('Voltou para hoje'); }
 function sheetCfg(){
   const c=S.cfg;
   abrir(`<h3>Ajustar metas</h3>
