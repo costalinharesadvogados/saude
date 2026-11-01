@@ -2,7 +2,7 @@
    Estratégia: network-first para o HTML (para você sempre pegar a versão nova),
    cache-first para os demais arquivos. Os DADOS ficam no localStorage,
    nunca no cache — limpar o cache não apaga registro nenhum. */
-const CACHE = 'rod-saude-v12';
+const CACHE = 'rod-saude-v13';
 const ARQ = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 /* As pastas /anamnese/ e /v2/ ficam fora do controle deste service worker.
    /anamnese/ são páginas independentes; /v2/ é a versão de teste multiperfil,

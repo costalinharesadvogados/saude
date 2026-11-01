@@ -691,6 +691,15 @@ function fmtData(d){
   const sem=['dom','seg','ter','qua','qui','sex','sáb'][dt.getDay()];
   return sem+' '+String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0');
 }
+/* data mais recente entre os exames (campo d no formato ddmmaaaa) — 01112026 */
+function ultimaDataLab(){
+  const ds=(S.labs||[]).map(l=>String(l.d||'')).filter(d=>/^\d{8}$/.test(d));
+  if(!ds.length) return '—';
+  const k=d=>d.slice(4)+d.slice(2,4)+d.slice(0,2);
+  ds.sort((a,b)=>k(a).localeCompare(k(b)));
+  const u=ds[ds.length-1];
+  return 'última coleta '+u.slice(0,2)+'/'+u.slice(2,4)+'/'+u.slice(4);
+}
 function ddmmaaaa(d){ if(!d) return '—'; const p=d.split('-'); return p[2]+p[1]+p[0]; }
 function isoOf(dd){ return dd.slice(4)+'-'+dd.slice(2,4)+'-'+dd.slice(0,2); }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -1316,7 +1325,7 @@ function renderSaude(){
       <span class="nm">${titulo}</span><span class="kc">${extra}</span><span class="cv">▸</span></div>
       <div class="cbody ${ab?'open':''}"><div style="padding-top:8px">${corpo}</div></div></div>`;
   };
-  h += bloco('s-lab','LAB','Marcadores laboratoriais','28032026',
+  h += bloco('s-lab','LAB','Marcadores laboratoriais',ultimaDataLab(),
     S.labs.map(l=>`<div class="kv"><span class="k">${esc(l.k)}<em style="display:block;font-size:10px;color:var(--tx3)">${l.d}</em></span>
       <span class="v ${l.s||''}">${esc(l.v)}${l.o?'<em>'+esc(l.o)+'</em>':''}</span></div>`).join(''));
   h += bloco('s-img','IMG','Achados estruturais','imagem e laudos',
@@ -1549,7 +1558,15 @@ function importar(inp){
   const r=new FileReader();
   r.onload=()=>{ try{
       const novo=JSON.parse(r.result);
-      if(!novo.dias&&!novo.treinos) throw 0;
+      if(!novo.dias&&!novo.treinos){
+        /* arquivo de ATUALIZAÇÃO (exames, perguntas, cardápio...): aplica sem tocar nos registros — 01112026 */
+        if(['labs','estrutural','perguntas','meds','plano','exames','cfg','bib'].some(k=>k in novo)){
+          if(aplicarJSON(JSON.stringify(novo))){ salvar(); render(); msg('Atualização aplicada'); }
+          else msg('Nada para aplicar no arquivo');
+          return;
+        }
+        throw 0;
+      }
       S = migrar(mesclar(base(), novo)); salvar(); render(); msg('Backup importado');
     }catch(e){ msg('Arquivo inválido'); } };
   r.readAsText(f); inp.value='';
